@@ -4,6 +4,8 @@ An interactive wheel for exploring the seven modes of the major scale and the ch
 
 Spin the wheel to change the key or mode, select a note to see which chords on it are in each parallel mode, and click a chord to spell it out with its scale degrees. Hover over terms to see what they mean.
 
+**Live site:** https://benjaminjnoack.github.io/modescope/
+
 ## Running it
 
 Requires [Node.js](https://nodejs.org/) (any recent version). There are no dependencies to install.
@@ -59,9 +61,15 @@ Under the wheel, the chosen chord is spelled out note by note. It starts as the 
 
 Hover over the heading under the wheel, the degree numbers, the Roman numerals or the chord buttons for an explanation of each term.
 
+## Deployment
+
+Every push to `master` publishes `public/` to GitHub Pages, using the workflow in `.github/workflows/pages.yml`. `server.js` is only used for local development.
+
 ## Project structure
 
 ```
+├── .github/workflows/
+│   └── pages.yml      Deploys public/ to GitHub Pages
 ├── server.js          Static file server with live reload (no dependencies)
 ├── package.json
 └── public/            Everything the browser loads
