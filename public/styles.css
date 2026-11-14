@@ -23,6 +23,13 @@ body {
 .ring { cursor: grab; }
 .ring.dragging { cursor: grabbing; }
 
+/* Locked note ring: can't be turned, shown with a heavy gray outline. */
+.ring.locked { cursor: default; }
+.ring.locked .segment {
+  stroke: dimgray;
+  stroke-width: 4;
+}
+
 .segment {
   fill: white;
   stroke: black;

@@ -44,6 +44,8 @@ function render() {
 
   keyName.textContent = NOTES[tonic];
   modeName.textContent = mode.name;
+
+  noteGroup.classList.toggle("locked", state.isNoteRingLocked());
 }
 
 makeDraggable(svg, noteGroup, {
@@ -51,6 +53,13 @@ makeDraggable(svg, noteGroup, {
   setRotation: state.setNoteRotation,
   step: state.NOTE_STEP,
   onChange: render,
+  canDrag: () => !state.isNoteRingLocked(),
+});
+
+// Double-click the outer ring to lock/unlock it (parallel vs. relative modes).
+noteGroup.addEventListener("dblclick", () => {
+  state.toggleNoteRingLock();
+  render();
 });
 
 makeDraggable(svg, modeGroup, {
