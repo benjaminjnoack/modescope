@@ -81,3 +81,36 @@ export function numeralTip(numeral, tonicName, mode, chordName) {
     `${chordName ? `, which is ${chordName}` : ""}. ` +
     `Uppercase numerals are major chords, lowercase are minor, and ° marks diminished.`;
 }
+
+// "4 flats", "1 sharp", "no sharps or flats".
+function signatureWords(count) {
+  if (count === 0) return "no sharps or flats";
+  const n = Math.abs(count);
+  return `${n} ${count > 0 ? "sharp" : "flat"}${n === 1 ? "" : "s"}`;
+}
+
+// The key signature in the center of the wheel. `notes` are its sharps or
+// flats in staff order, `relatives` every mode that shares it (e.g. "F Aeolian").
+export function signatureTip(count, notes, relatives) {
+  const which = count === 0 ? "" : ` (${notes.join(" ")})`;
+  return `Key signature: ${signatureWords(count)}${which}. This is what a staff in a songbook ` +
+    `shows at the start of each line. It only says which notes are used, so every mode with ` +
+    `these notes shares it: ${relatives.join(", ")}. Turning the inner ring keeps the key ` +
+    `signature and moves the tonic.`;
+}
+
+// A key signature button. `major` and `minor` are the major and minor keys
+// with this signature (e.g. "A♭" and "F"). Unlocked, `target` is where the
+// button goes (e.g. "F Aeolian"); locked, it's the mode on the tonic with
+// this signature, or null if there isn't one.
+export function signatureButtonTip({ count, major, minor, locked, target, tonicName }) {
+  const base = `${signatureWords(count)[0].toUpperCase()}${signatureWords(count).slice(1)}: ` +
+    `the key signature of ${major} major and ${minor} minor.`;
+  if (!locked) return `${base} Click to use these notes and keep the mode: ${target}.`;
+  if (!target) {
+    return `${base} No mode on ${tonicName} has ${signatureWords(count)}. ` +
+      `Double-click the outer ring to unlock it and change the key.`;
+  }
+  return `${base} The outer ring is locked, so ${tonicName} stays the tonic. ` +
+    `Click to switch to the mode on ${tonicName} with this signature: ${target}.`;
+}

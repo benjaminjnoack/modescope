@@ -70,7 +70,12 @@ function wrapOffset(semitones) {
 function parseNote(name) {
   const letter = LETTERS.indexOf(name[0]);
   const offset = [...name.slice(1)].reduce((sum, c) => sum + (c === "♯" ? 1 : -1), 0);
-  return { letter, semitones: LETTER_SEMITONES[letter] + offset };
+  return { letter, offset, semitones: LETTER_SEMITONES[letter] + offset };
+}
+
+// A note name's index into NOTES: "D♭" and "C♯" are 1, "C♭" is 11.
+export function noteIndex(name) {
+  return ((parseNote(name).semitones % NOTES.length) + NOTES.length) % NOTES.length;
 }
 
 // Spell a chord from its root's name (e.g. "D♭") and its type. Each chord
@@ -150,4 +155,44 @@ export function modeOffsetSemitones(position) {
   const n = Math.floor(position);
   const fraction = position - n;
   return semitonesAt(n) + fraction * (semitonesAt(n + 1) - semitonesAt(n));
+}
+
+// Key signatures. A signature is a count: sharps are positive and flats
+// negative, so 2 is two sharps (D major) and -4 is four flats (A♭ major).
+// It only says which notes are used, so every mode of one parent major scale
+// shares it: four flats is also F Aeolian, B♭ Dorian, C Phrygian and so on.
+
+// Sharps are written in this order; flats in the reverse (B♭ E♭ A♭ ...).
+const SHARP_ORDER = "FCGDAEB";
+
+// The key signature of a scale spelled with one letter per note
+// (from spellScale): F Aeolian, F G A♭ B♭ C D♭ E♭, is -4.
+export function keySignature(scale) {
+  return scale.reduce((sum, name) => sum + parseNote(name).offset, 0);
+}
+
+// A scale's sharps or flats in the order a staff shows them: B♭ E♭ A♭ D♭.
+export function signatureNotes(scale) {
+  const altered = scale.filter((name) => name.length > 1);
+  const flats = altered.some((name) => name.includes("♭"));
+  const order = flats ? [...SHARP_ORDER].reverse().join("") : SHARP_ORDER;
+  return altered.sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]));
+}
+
+// The major key with a key signature: each sharp is a 5th up from C
+// (C G D A ...), each flat a 4th up (C F B♭ E♭ ...). 2 is "D", -4 is "A♭".
+export function majorForSignature(count) {
+  let name = "C";
+  for (let i = 0; i < Math.abs(count); i++) {
+    name = count > 0 ? spellAbove(parseNote(name), 4, 7) : spellAbove(parseNote(name), 3, 5);
+  }
+  return name;
+}
+
+// The parent major key of the mode at `modeIndex` (0 = Ionian) on a tonic:
+// F Aeolian's is A♭, D Dorian's is C.
+export function parentMajorName(tonicName, modeIndex) {
+  const steps = (LETTERS.length - modeIndex) % LETTERS.length;
+  const semitones = (NOTES.length - MODES[0].intervals[modeIndex]) % NOTES.length;
+  return spellAbove(parseNote(tonicName), steps, semitones);
 }

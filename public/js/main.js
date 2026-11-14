@@ -1,6 +1,9 @@
 // Builds the wheel and keeps it in sync with the state.
 
-import { MODES, NOTES, chordsOn, chordType, scaleDegree, spellChord } from "./music.js";
+import {
+  MODES, NOTES, chordsOn, chordType, majorForSignature, parentMajorName, scaleDegree,
+  signatureNotes, spellChord, spellScale,
+} from "./music.js";
 import * as state from "./state.js";
 import { createRing } from "./ring.js";
 import { makeDraggable } from "./drag.js";
@@ -18,6 +21,8 @@ const modeGroup = document.getElementById("mode-ring");
 const numeralGroup = document.getElementById("numerals");
 const keyName = document.getElementById("key-name");
 const modeName = document.getElementById("mode-name");
+const keySignature = document.getElementById("key-signature");
+const keySignatureList = document.getElementById("key-signature-list");
 const selectedMarker = document.getElementById("selected-marker");
 const chordPanelTitle = document.getElementById("chord-panel-title");
 const chordList = document.getElementById("chord-list");
@@ -62,7 +67,58 @@ function render() {
 
   noteGroup.classList.toggle("locked", state.isNoteRingLocked());
 
+  renderKeySignature();
   renderSelectedNote();
+}
+
+// "4♭", "2♯" or "0".
+function signatureLabel(count) {
+  return count === 0 ? "0" : `${Math.abs(count)}${count > 0 ? "♯" : "♭"}`;
+}
+
+// The current key signature in the center of the wheel, and the buttons
+// for jumping to one (7♭ ... 0 ... 7♯).
+function renderKeySignature() {
+  const mode = state.currentMode();
+  const tonicName = state.tonicName();
+  const current = state.keySignatureNow();
+
+  // Every mode with the same notes: F Aeolian, B♭ Dorian, ... for 4 flats.
+  const parentScale = spellScale(parentMajorName(tonicName, state.currentModeIndex()), MODES[0]);
+  const relatives = MODES.map((relative, i) => `${parentScale[i]} ${relative.name}`);
+  keySignature.replaceChildren(
+    current === 0 ? "no ♯/♭" : signatureLabel(current),
+    createSvg("title", {}, tips.signatureTip(
+      current, signatureNotes(spellScale(tonicName, mode)), relatives)),
+  );
+
+  const locked = state.isNoteRingLocked();
+  const counts = Array.from({ length: 15 }, (_, i) => i - 7);
+  keySignatureList.replaceChildren(...counts.map((count) => {
+    const major = majorForSignature(count);
+    const majorScale = spellScale(major, MODES[0]);
+    // Unlocked: same mode, new notes. Locked: same tonic, the matching mode.
+    const match = locked ? state.modeForSignature(count) : null;
+    const target = locked
+      ? match && `${match.tonicName} ${MODES[match.modeIndex].name}`
+      : `${majorScale[state.currentModeIndex()]} ${mode.name}`;
+
+    const item = document.createElement("li");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = signatureLabel(count);
+    button.classList.toggle("current", count === current);
+    button.disabled = locked && !match;
+    button.title = tips.signatureButtonTip({
+      count, major, minor: majorScale[5], locked, target, tonicName,
+    });
+    button.addEventListener("click", () => {
+      state.setKeySignature(count);
+      render();
+    });
+    item.append(button);
+    return item;
+  }));
 }
 
 // Outline the selected segment and show its chords in every parallel mode.
@@ -80,11 +136,15 @@ function renderSelectedNote() {
   const tonicName = state.tonicName();
   chordPanelTitle.textContent = `Chords on ${rootName}`;
 
-  // Panel rows: the current mode first, then the rest in order.
+  // Panel rows: the current mode first, then the rest in order. Each row
+  // spells the root with its own mode's letters: C in G♯ Ionian is B♯.
+  const interval = (note - tonic + NOTES.length) % NOTES.length;
   const rows = MODES.map((_, offset) => {
     const modeIndex = (start + offset) % MODES.length;
     const mode = MODES[modeIndex];
-    return { mode, modeIndex, offset, result: chordsOn(mode, tonic, note) };
+    const result = chordsOn(mode, tonic, note);
+    const root = result ? spellScale(tonicName, mode)[mode.intervals.indexOf(interval)] : rootName;
+    return { mode, modeIndex, offset, result, root };
   });
 
   // The chord to spell: the one clicked, or the panel's first chord if
@@ -96,9 +156,10 @@ function renderSelectedNote() {
     state.selectChord(listed[0]);
   }
   const chord = state.selectedChord();
-  renderSpelledChord(rootName, chord.suffix, MODES[chord.mode]);
+  const chordRow = rows.find((row) => row.modeIndex === chord.mode);
+  renderSpelledChord(chordRow.root, chord.suffix, MODES[chord.mode]);
 
-  chordList.replaceChildren(...rows.map(({ mode, modeIndex, offset, result }) => {
+  chordList.replaceChildren(...rows.map(({ mode, modeIndex, offset, result, root }) => {
     const item = document.createElement("li");
     item.classList.toggle("current", offset === 0);
     item.classList.toggle("absent", result === null);
@@ -111,7 +172,7 @@ function renderSelectedNote() {
     const numeral = document.createElement("span");
     numeral.textContent = result ? result.numeral : "—";
     if (result) {
-      numeral.title = tips.numeralTip(result.numeral, tonicName, mode, rootName + result.chords[0]);
+      numeral.title = tips.numeralTip(result.numeral, tonicName, mode, root + result.chords[0]);
     } else {
       numeral.title = `${rootName} isn't in ${tonicName} ${mode.name}, so there are no chords on it.`;
     }
@@ -126,8 +187,8 @@ function renderSelectedNote() {
         const item = document.createElement("li");
         const button = document.createElement("button");
         button.type = "button";
-        button.textContent = rootName + suffix;
-        button.title = tips.chordTypeTip(rootName + suffix, chordType(suffix));
+        button.textContent = root + suffix;
+        button.title = tips.chordTypeTip(root + suffix, chordType(suffix));
         // The exact chord clicked is emphasized; the same chord in other
         // modes gets a lighter highlight.
         const choice = { suffix, mode: modeIndex };

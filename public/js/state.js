@@ -4,7 +4,10 @@
 // carries the notes along. Locking the note ring switches to parallel modes:
 // the tonic stays put and only the mode changes.
 
-import { NOTES, MODES, defaultTonicName, modeOffsetSemitones, spellScale, spellings } from "./music.js";
+import {
+  NOTES, MODES, defaultTonicName, keySignature, majorForSignature, modeOffsetSemitones,
+  noteIndex, parentMajorName, spellScale, spellings,
+} from "./music.js";
 
 export const NOTE_STEP = 360 / NOTES.length;
 export const MODE_STEP = 360 / MODES.length;
@@ -19,10 +22,12 @@ let noteRingLocked = false;
 // mode it was chosen from, as { suffix, mode }, or null for the panel's
 // first chord. There is always exactly one selected note. It starts as the
 // top note and moves with the ring as it turns.
-// `tonicSpelling` is the name chosen for a black-key tonic, as
-// { note, name } (e.g. C♯ instead of D♭), or null to use the usual one.
+// `keySpelling` is how the user chose to spell the parent major key, as
+// { parent, name } (e.g. { parent: 1, name: "C♯" } for 7 sharps instead of
+// D♭'s 5 flats), or null to use the usual spelling. It belongs to the parent
+// key rather than the tonic, so turning the mode ring keeps the sharps.
 // It's kept here so undoing a double-click restores it too.
-let selection = { note: 0, spelling: 0, chord: null, tonicSpelling: null };
+let selection = { note: 0, spelling: 0, chord: null, keySpelling: null };
 
 // Which item of a ring sits at the top, given its rotation.
 function topIndex(rotation, step, count) {
@@ -73,7 +78,7 @@ export function clickNote(note) {
   } else if (note === tonicIndex()) {
     const names = spellings(note);
     const name = names[(names.indexOf(tonicName()) + 1) % names.length];
-    selection = { ...selection, tonicSpelling: { note, name } };
+    spellKey(parentMajorName(name, currentModeIndex()));
   } else if (scaleDegreeOf(note) === -1) {
     const count = spellings(note).length;
     selection = { ...selection, spelling: (selection.spelling + 1) % count };
@@ -88,12 +93,63 @@ export function selectChord(chord) {
   selection = { ...selection, chord };
 }
 
-// The tonic's name: the spelling chosen for it, or else the usual one.
+// The tonic's name: from the parent key's chosen spelling, or else the usual one.
 export function tonicName() {
-  const tonic = tonicIndex();
-  const chosen = selection.tonicSpelling;
-  if (chosen && chosen.note === tonic) return chosen.name;
-  return defaultTonicName(tonic, currentMode());
+  const chosen = selection.keySpelling;
+  if (chosen && chosen.parent === parentIndex()) {
+    return spellScale(chosen.name, MODES[0])[currentModeIndex()];
+  }
+  return defaultTonicName(tonicIndex(), currentMode());
+}
+
+// The parent major key (a note index): C for D Dorian.
+function parentIndex() {
+  return (tonicIndex() - MODES[0].intervals[currentModeIndex()] + NOTES.length) % NOTES.length;
+}
+
+function spellKey(parentName) {
+  selection = { ...selection, keySpelling: { parent: noteIndex(parentName), name: parentName } };
+}
+
+// The current key signature: 2 for two sharps, -4 for four flats.
+export function keySignatureNow() {
+  return keySignature(spellScale(tonicName(), currentMode()));
+}
+
+// The mode on the current tonic with a key signature, as
+// { modeIndex, tonicName }, or null if there isn't one: with C as the
+// tonic, four flats is C Phrygian, but no mode on C has six sharps.
+export function modeForSignature(count) {
+  for (const [modeIndex, mode] of MODES.entries()) {
+    for (const name of spellings(tonicIndex())) {
+      if (keySignature(spellScale(name, mode)) === count) return { modeIndex, tonicName: name };
+    }
+  }
+  return null;
+}
+
+// Jump to a key signature. Unlocked, the outer ring turns to its notes and
+// the mode stays: two sharps in Aeolian is B Aeolian. Locked, the tonic
+// stays and the mode changes: four flats on C is C Phrygian.
+export function setKeySignature(count) {
+  if (noteRingLocked) {
+    const match = modeForSignature(count);
+    if (!match) return;
+    const steps = wrap(match.modeIndex - currentModeIndex(), MODES.length);
+    setModeRotation(modeRotation - steps * MODE_STEP);
+    spellKey(parentMajorName(match.tonicName, match.modeIndex));
+  } else {
+    const parentName = majorForSignature(count);
+    const steps = wrap(noteIndex(parentName) - parentIndex(), NOTES.length);
+    setNoteRotation(getNoteRotation() - steps * NOTE_STEP);
+    spellKey(parentName);
+  }
+}
+
+// The shortest way round a ring of `count` items: 5 steps of 7 is -2.
+function wrap(steps, count) {
+  const half = Math.floor(count / 2);
+  return ((steps % count) + count + half) % count - half;
 }
 
 // Which degree of the current mode a note is (0-6), or -1 if it isn't in it.

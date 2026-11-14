@@ -29,6 +29,16 @@ The page reloads itself whenever a file in `public/` changes. Changes to `server
 - **Double-click the outer ring** to lock or unlock it. A locked ring has a thick gray outline and can't be dragged.
 - **Roman numerals** around the outside show the chord built on each degree of the mode. Uppercase numerals are major chords, lowercase are minor, and ° marks diminished.
 
+### Key signature
+
+The center of the wheel shows the key signature of the current scale, as the number of sharps or flats a staff would show (for example 4♭ for F Aeolian). A key signature only says which notes are used, so every mode with the same notes shares it: four flats is A♭ Ionian, B♭ Dorian, C Phrygian, F Aeolian and so on. Turning the inner ring while it's unlocked keeps the key signature and moves the tonic.
+
+Under the wheel is a row of key signatures from 7♭ to 7♯. Use it to find a song from a songbook: pick the signature on its staff, then turn the inner ring until the tonic is the note that sounds like home.
+
+- **Unlocked:** the outer ring turns to the signature's notes and the mode stays the same. From Aeolian, 4♭ goes to F Aeolian and 2♯ to B Aeolian.
+- **Locked:** the tonic stays and the mode changes to the one with that signature. With C as the tonic, 4♭ goes to C Phrygian. Signatures that no mode on the tonic has are grayed out.
+- 7♯ and 5♭ are the same notes, spelled differently (C♯ vs D♭ major), as are 6♯/6♭ and 5♯/7♭. The button you pick sets the spelling.
+
 ### Selecting a note
 
 - **Click a note** on the outer ring to select it. It gets a blue outline. A note is always selected, and the page starts with the top note.
@@ -37,7 +47,7 @@ The page reloads itself whenever a file in `public/` changes. Changes to `server
 
 ### Chord panel
 
-For the selected note, the panel lists the chords on it in each parallel mode of the current tonic. The current mode is at the top, and the rest follow in order (Ionian → Dorian → …). A chord is listed in a mode only when every one of its notes is in that mode. For example, with C as the tonic, D is listed in C Ionian (Dm) and in C Lydian (D).
+For the selected note, the panel lists the chords on it in each parallel mode of the current tonic. The current mode is at the top, and the rest follow in order (Ionian → Dorian → …). A chord is listed in a mode only when every one of its notes is in that mode. Each mode spells the note with its own letters, so with G♯ as the tonic, C is listed as B♯m in G♯ Ionian. For example, with C as the tonic, D is listed in C Ionian (Dm) and in C Lydian (D).
 
 These chord types are included:
 

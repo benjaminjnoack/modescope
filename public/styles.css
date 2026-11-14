@@ -73,6 +73,45 @@ body {
   font-weight: bold;
 }
 .mode-name { font-size: 14px; }
+.key-signature {
+  font-size: 13px;
+  fill: dimgray;
+}
+
+/* Key signature picker, under the wheel: 7♭ ... 0 ... 7♯ */
+.key-signatures { text-align: center; }
+.key-signatures h2 {
+  display: inline-block;
+  margin: 0.5rem 0;
+  font-size: 1rem;
+}
+.key-signature-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.1rem;
+}
+.key-signature-list button {
+  font: inherit;
+  font-size: 0.85rem;
+  min-width: 1.45rem;
+  border: 1px solid black;
+  background: white;
+  padding: 0.1rem 0;
+  cursor: pointer;
+}
+.key-signature-list button.current {
+  background: gold;
+  font-weight: bold;
+}
+.key-signature-list button:disabled {
+  color: lightgray;
+  border-color: lightgray;
+  cursor: help;
+}
 
 /* Anything with a tooltip shows a help cursor; words get a dotted underline. */
 [title], .numeral { cursor: help; }
