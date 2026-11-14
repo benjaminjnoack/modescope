@@ -13,10 +13,9 @@ export const MODE_STEP = 360 / MODES.length;
 let parentRotation = 0;
 let modeRotation = 0;
 let noteRingLocked = false;
-// The selected segment, as a position around the outer ring counted in
-// semitones clockwise from the top. It stays put while the ring turns, so
-// the selected note is whichever note sits there.
-let selectedSlot = 0;
+// The selected note (an index into NOTES). There is always exactly one.
+// It starts as the top note and moves with the ring as it turns.
+let selected = 0;
 
 // Which item of a ring sits at the top, given its rotation.
 function topIndex(rotation, step, count) {
@@ -53,12 +52,12 @@ export function setNoteRotation(rotation) {
   parentRotation += rotation - getNoteRotation();
 }
 
-export function getSelectedSlot() {
-  return selectedSlot;
+export function selectedNote() {
+  return selected;
 }
 
-export function selectedNote() {
-  return (tonicIndex() + selectedSlot) % NOTES.length;
+export function selectNote(note) {
+  selected = note;
 }
 
 export function currentModeIndex() {

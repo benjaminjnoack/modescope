@@ -56,7 +56,7 @@ function render() {
 // Outline the selected segment and show its chords in every parallel mode.
 function renderSelectedNote() {
   const note = state.selectedNote();
-  const center = state.getSelectedSlot() * state.NOTE_STEP;
+  const center = note * state.NOTE_STEP + state.getNoteRotation();
   selectedMarker.setAttribute("d", segmentPath(
     NOTE_RING.inner, NOTE_RING.outer,
     center - state.NOTE_STEP / 2, center + state.NOTE_STEP / 2));
@@ -91,6 +91,13 @@ makeDraggable(svg, noteGroup, {
   step: state.NOTE_STEP,
   onChange: render,
   canDrag: () => !state.isNoteRingLocked(),
+  // Click a note to select it.
+  onTap: (target) => {
+    const note = noteRing.indexOf(target);
+    if (note === -1) return;
+    state.selectNote(note);
+    render();
+  },
 });
 
 // Double-click the outer ring to lock/unlock it (parallel vs. relative modes).

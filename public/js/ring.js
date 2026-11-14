@@ -24,5 +24,10 @@ export function createRing(group, labels, { inner, outer }) {
     });
   }
 
-  return { layout };
+  // Index of the segment that `element` (a path or label) belongs to, or -1.
+  function indexOf(element) {
+    return segments.findIndex(({ path, text }) => path === element || text === element);
+  }
+
+  return { layout, indexOf };
 }
