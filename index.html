@@ -35,6 +35,9 @@
     const SVG_NS = "http://www.w3.org/2000/svg";
     const STEP = 360 / NOTES.length;
 
+    // Semitones above the tonic for each note of the Ionian (major) mode.
+    const IONIAN = [0, 2, 4, 5, 7, 9, 11];
+
     const svg = document.getElementById("wheel");
     const group = document.getElementById("segments");
 
@@ -93,7 +96,11 @@
           `A ${innerRadius} ${innerRadius} 0 0 0 ${ix1} ${iy1}`,
           "Z",
         ].join(" "));
-        path.setAttribute("fill", i === selected ? "gold" : "white");
+        const interval = (i - selected + NOTES.length) % NOTES.length;
+        let fill = "white";
+        if (interval === 0) fill = "gold";               // Tonic, under the pointer.
+        else if (IONIAN.includes(interval)) fill = "lightyellow"; // Other mode notes.
+        path.setAttribute("fill", fill);
 
         const [lx, ly] = point(labelRadius, center);
         label.setAttribute("x", lx);
