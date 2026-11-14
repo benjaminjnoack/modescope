@@ -5,6 +5,7 @@ import * as state from "./state.js";
 import { createRing } from "./ring.js";
 import { makeDraggable } from "./drag.js";
 import { createSvg, point, segmentPath } from "./svg.js";
+import * as tips from "./tooltips.js";
 
 // Ring sizes: notes outside, modes inside, key/mode label in the center.
 const NOTE_RING = { inner: 130, outer: 180 };
@@ -45,9 +46,15 @@ function render() {
   modeRing.layout(state.getModeRotation(), (i) => (MODES[i] === mode ? ["selected"] : []));
 
   // Roman numerals stay fixed outside the ring, one per mode degree.
+  // Each has a tooltip naming the chord it stands for.
   numeralGroup.replaceChildren(...mode.intervals.map((interval, degree) => {
     const [x, y] = point(NUMERAL_RADIUS, interval * state.NOTE_STEP);
-    return createSvg("text", { class: "numeral", x, y }, mode.numerals[degree]);
+    const numeral = mode.numerals[degree];
+    const root = (tonic + interval) % NOTES.length;
+    const triad = state.noteName(root) + chordsOn(mode, tonic, root).chords[0];
+    const text = createSvg("text", { class: "numeral", x, y }, numeral);
+    text.append(createSvg("title", {}, tips.numeralTip(numeral, state.noteName(tonic), mode, triad)));
+    return text;
   }));
 
   keyName.textContent = state.noteName(tonic);
@@ -103,6 +110,11 @@ function renderSelectedNote() {
     modeLabel.textContent = `${tonicName} ${mode.name}`;
     const numeral = document.createElement("span");
     numeral.textContent = result ? result.numeral : "—";
+    if (result) {
+      numeral.title = tips.numeralTip(result.numeral, tonicName, mode, rootName + result.chords[0]);
+    } else {
+      numeral.title = `${rootName} isn't in ${tonicName} ${mode.name}, so there are no chords on it.`;
+    }
     header.append(modeLabel, numeral);
     item.append(header);
 
@@ -115,6 +127,7 @@ function renderSelectedNote() {
         const button = document.createElement("button");
         button.type = "button";
         button.textContent = rootName + suffix;
+        button.title = tips.chordTypeTip(rootName + suffix, chordType(suffix));
         // The exact chord clicked is emphasized; the same chord in other
         // modes gets a lighter highlight.
         const choice = { suffix, mode: modeIndex };
@@ -144,10 +157,28 @@ function renderSpelledChord(rootName, suffix, mode) {
   const tonicName = state.selectedNote() === tonic
     ? state.noteName(tonic)
     : bestTonicSpelling(tonic, names);
-  spelledName.textContent = `${rootName}${suffix} in ${tonicName} ${mode.name}`;
+  const type = chordType(suffix);
+  const degreeLabels = names.map((name) => scaleDegree(tonicName, name));
 
-  spelledNotes.replaceChildren(...names.map((name) => {
-    const degree = scaleDegree(tonicName, name);
+  // Heading, e.g. "Dm7 in C Lydian", with a tooltip on each part.
+  const tipSpan = (text, title) => {
+    const span = document.createElement("span");
+    span.className = "has-tip";
+    span.textContent = text;
+    span.title = title;
+    return span;
+  };
+  spelledName.replaceChildren(
+    tipSpan(rootName, tips.rootTip({ rootName, tonicName, mode, type, degreeLabels })),
+    ...(suffix ? [tipSpan(suffix, tips.chordTypeTip(rootName + suffix, type))] : []),
+    " in ",
+    tipSpan(tonicName, tips.tonicTip(tonicName, mode)),
+    " ",
+    tipSpan(mode.name, tips.modeTip(mode)),
+  );
+
+  spelledNotes.replaceChildren(...names.map((name, i) => {
+    const degree = degreeLabels[i];
     const item = document.createElement("li");
     const noteLabel = document.createElement("span");
     noteLabel.className = "spelled-note";
@@ -155,6 +186,7 @@ function renderSpelledChord(rootName, suffix, mode) {
     const degreeLabel = document.createElement("span");
     degreeLabel.className = "spelled-degree";
     degreeLabel.textContent = degree;
+    item.title = tips.degreeTip(name, degree, tonicName, mode);
     item.append(noteLabel, degreeLabel);
     return item;
   }));

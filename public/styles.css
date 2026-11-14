@@ -74,6 +74,10 @@ body {
 }
 .mode-name { font-size: 14px; }
 
+/* Anything with a tooltip shows a help cursor; words get a dotted underline. */
+[title], .numeral { cursor: help; }
+.has-tip { text-decoration: underline dotted; }
+
 /* Chord panel */
 .chord-panel {
   flex: 0 1 22rem;
