@@ -35,14 +35,14 @@ export const CHORD_TYPES = [
   { suffix: "maj13", notes: [0, 4, 7, 11, 2, 9] },
 ];
 
-// Chord name for a root note index and suffix, e.g. "Dm7" or "C♯m7/D♭m7".
-export function chordName(root, suffix) {
-  return NOTES[root].split("/").map((name) => name + suffix).join("/");
+// The ways to spell a note, e.g. ["C♯", "D♭"] or just ["D"].
+export function spellings(note) {
+  return NOTES[note].split("/");
 }
 
 // The chords on `root` in `mode` built on `tonic` (both note indexes):
-// the degree's Roman numeral and the names of every chord type that fits
-// the mode. Null if `root` isn't in that mode.
+// the degree's Roman numeral and the suffix of every chord type that fits
+// the mode (e.g. "m7"). Null if `root` isn't in that mode.
 export function chordsOn(mode, tonic, root) {
   const interval = (root - tonic + NOTES.length) % NOTES.length;
   const degree = mode.intervals.indexOf(interval);
@@ -53,7 +53,7 @@ export function chordsOn(mode, tonic, root) {
     numeral: mode.numerals[degree],
     chords: CHORD_TYPES
       .filter((type) => type.notes.every(inMode))
-      .map((type) => chordName(root, type.suffix)),
+      .map((type) => type.suffix),
   };
 }
 

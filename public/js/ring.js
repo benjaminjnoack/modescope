@@ -29,5 +29,10 @@ export function createRing(group, labels, { inner, outer }) {
     return segments.findIndex(({ path, text }) => path === element || text === element);
   }
 
-  return { layout, indexOf };
+  // Change the label shown on segment i.
+  function setLabel(i, label) {
+    segments[i].text.textContent = label;
+  }
+
+  return { layout, indexOf, setLabel };
 }

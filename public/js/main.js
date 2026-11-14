@@ -36,6 +36,9 @@ function render() {
     return [];
   });
 
+  // Selected note shows its chosen spelling; the others show every spelling.
+  NOTES.forEach((_, i) => noteRing.setLabel(i, state.noteName(i)));
+
   // Inner ring: the current mode selected.
   modeRing.layout(state.getModeRotation(), (i) => (MODES[i] === mode ? ["selected"] : []));
 
@@ -45,7 +48,7 @@ function render() {
     return createSvg("text", { class: "numeral", x, y }, mode.numerals[degree]);
   }));
 
-  keyName.textContent = NOTES[tonic];
+  keyName.textContent = state.noteName(tonic);
   modeName.textContent = mode.name;
 
   noteGroup.classList.toggle("locked", state.isNoteRingLocked());
@@ -64,7 +67,9 @@ function renderSelectedNote() {
   // Start at the current mode, then continue in order (Ionian -> Dorian ...).
   const tonic = state.tonicIndex();
   const start = state.currentModeIndex();
-  chordPanelTitle.textContent = `Chords on ${NOTES[note]}`;
+  const rootName = state.noteName(note);
+  const tonicName = state.noteName(tonic);
+  chordPanelTitle.textContent = `Chords on ${rootName}`;
   chordList.replaceChildren(...MODES.map((_, offset) => {
     const mode = MODES[(start + offset) % MODES.length];
     const result = chordsOn(mode, tonic, note);
@@ -76,7 +81,7 @@ function renderSelectedNote() {
     const header = document.createElement("div");
     header.className = "chord-header";
     const modeLabel = document.createElement("span");
-    modeLabel.textContent = `${NOTES[tonic]} ${mode.name}`;
+    modeLabel.textContent = `${tonicName} ${mode.name}`;
     const numeral = document.createElement("span");
     numeral.textContent = result ? result.numeral : "—";
     header.append(modeLabel, numeral);
@@ -86,9 +91,9 @@ function renderSelectedNote() {
     if (result) {
       const chords = document.createElement("ul");
       chords.className = "chords";
-      chords.append(...result.chords.map((name) => {
+      chords.append(...result.chords.map((suffix) => {
         const chord = document.createElement("li");
-        chord.textContent = name;
+        chord.textContent = rootName + suffix;
         return chord;
       }));
       item.append(chords);
@@ -103,17 +108,24 @@ makeDraggable(svg, noteGroup, {
   step: state.NOTE_STEP,
   onChange: render,
   canDrag: () => !state.isNoteRingLocked(),
-  // Click a note to select it.
+  // Click a note to select it; click it again to change its spelling.
   onTap: (target) => {
     const note = noteRing.indexOf(target);
     if (note === -1) return;
-    state.selectNote(note);
+    recentSelections = [state.getSelection(), ...recentSelections].slice(0, 2);
+    state.clickNote(note);
     render();
   },
 });
 
+// The selections from before the last two clicks, newest first.
+let recentSelections = [];
+
 // Double-click the outer ring to lock/unlock it (parallel vs. relative modes).
+// A double-click's two clicks shouldn't change the selection, so undo them.
 noteGroup.addEventListener("dblclick", () => {
+  if (recentSelections.length === 2) state.setSelection(recentSelections[1]);
+  recentSelections = [];
   state.toggleNoteRingLock();
   render();
 });

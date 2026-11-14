@@ -4,7 +4,7 @@
 // carries the notes along. Locking the note ring switches to parallel modes:
 // the tonic stays put and only the mode changes.
 
-import { NOTES, MODES, modeOffsetSemitones } from "./music.js";
+import { NOTES, MODES, modeOffsetSemitones, spellings } from "./music.js";
 
 export const NOTE_STEP = 360 / NOTES.length;
 export const MODE_STEP = 360 / MODES.length;
@@ -13,9 +13,10 @@ export const MODE_STEP = 360 / MODES.length;
 let parentRotation = 0;
 let modeRotation = 0;
 let noteRingLocked = false;
-// The selected note (an index into NOTES). There is always exactly one.
+// The selected note (an index into NOTES) and which of its spellings to use
+// (e.g. 0 = "C♯", 1 = "D♭"). There is always exactly one selected note.
 // It starts as the top note and moves with the ring as it turns.
-let selected = 0;
+let selection = { note: 0, spelling: 0 };
 
 // Which item of a ring sits at the top, given its rotation.
 function topIndex(rotation, step, count) {
@@ -53,11 +54,33 @@ export function setNoteRotation(rotation) {
 }
 
 export function selectedNote() {
-  return selected;
+  return selection.note;
 }
 
-export function selectNote(note) {
-  selected = note;
+// Clicking a new note selects it with its first spelling. Clicking the
+// selected note again cycles through its spellings.
+export function clickNote(note) {
+  if (note === selection.note) {
+    const count = spellings(note).length;
+    selection = { note, spelling: (selection.spelling + 1) % count };
+  } else {
+    selection = { note, spelling: 0 };
+  }
+}
+
+// The name of a note: the chosen spelling for the selected note, and every
+// spelling (e.g. "C♯/D♭") for the others.
+export function noteName(note) {
+  return note === selection.note ? spellings(note)[selection.spelling] : NOTES[note];
+}
+
+// Save and restore the selection (used to undo the clicks of a double-click).
+export function getSelection() {
+  return selection;
+}
+
+export function setSelection(saved) {
+  selection = saved;
 }
 
 export function currentModeIndex() {
