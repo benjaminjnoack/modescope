@@ -32,7 +32,8 @@ The page reloads itself whenever a file in `public/` changes. Changes to `server
 ### Selecting a note
 
 - **Click a note** on the outer ring to select it. It gets a blue outline. A note is always selected, and the page starts with the top note.
-- **Click a selected black key again** to switch its spelling, for example C♯ ↔ D♭. The chosen spelling is used everywhere that note is named.
+- **Note names follow the scale.** The notes of the mode use each letter A–G exactly once, so F Ionian shows B♭ (not A♯/B♭) and F♯ Ionian shows E♯ (not F). A black-key tonic gets the spelling with fewer accidentals, so D♭ Ionian rather than C♯ Ionian. Notes outside the mode show both names (C♯/D♭) and use the first one when selected.
+- **Click a selected note again** to switch its spelling: a note outside the mode toggles C♯ ↔ D♭, and the tonic respells the whole scale (D♭ Ionian ↔ C♯ Ionian). The chosen spelling is used everywhere that note is named.
 
 ### Chord panel
 

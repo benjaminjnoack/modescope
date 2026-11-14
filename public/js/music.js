@@ -76,11 +76,30 @@ function parseNote(name) {
 // is D♭ F♭ A♭, not D♭ E A♭. Returns the note names.
 export function spellChord(rootName, type) {
   const root = parseNote(rootName);
-  return type.tones.map(([degree, semitones]) => {
-    const letter = (root.letter + degree - 1) % LETTERS.length;
-    const offset = wrapOffset(root.semitones + semitones - LETTER_SEMITONES[letter]);
-    return LETTERS[letter] + accidental(offset);
-  });
+  return type.tones.map(([degree, semitones]) => spellAbove(root, degree - 1, semitones));
+}
+
+// The note `semitones` above `root`, spelled with the letter `steps` letters
+// above the root's: 2 steps and 3 semitones above D♭ is F♭.
+function spellAbove(root, steps, semitones) {
+  const letter = (root.letter + steps) % LETTERS.length;
+  const offset = wrapOffset(root.semitones + semitones - LETTER_SEMITONES[letter]);
+  return LETTERS[letter] + accidental(offset);
+}
+
+// Spell a mode from its tonic's name so that each letter A-G is used
+// exactly once: F Ionian is F G A B♭ C D E, and F♯ Ionian ends on E♯, not F.
+export function spellScale(tonicName, mode) {
+  const tonic = parseNote(tonicName);
+  return mode.intervals.map((semitones, degree) => spellAbove(tonic, degree, semitones));
+}
+
+// The usual name for the tonic `tonic` (a note index) in `mode`: the
+// spelling whose scale has the fewest accidentals, so D♭ Ionian (5 flats)
+// rather than C♯ Ionian (7 sharps). Ties go to the first spelling.
+export function defaultTonicName(tonic, mode) {
+  const accidentals = (name) => spellScale(name, mode).join("").replace(/[A-G]/g, "").length;
+  return spellings(tonic).reduce((best, name) => (accidentals(name) < accidentals(best) ? name : best));
 }
 
 // A note's scale degree above a tonic, compared with the tonic's major

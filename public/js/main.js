@@ -1,6 +1,6 @@
 // Builds the wheel and keeps it in sync with the state.
 
-import { MODES, NOTES, chordsOn, chordType, scaleDegree, spellChord, spellings } from "./music.js";
+import { MODES, NOTES, chordsOn, chordType, scaleDegree, spellChord } from "./music.js";
 import * as state from "./state.js";
 import { createRing } from "./ring.js";
 import { makeDraggable } from "./drag.js";
@@ -53,11 +53,11 @@ function render() {
     const root = (tonic + interval) % NOTES.length;
     const triad = state.noteName(root) + chordsOn(mode, tonic, root).chords[0];
     const text = createSvg("text", { class: "numeral", x, y }, numeral);
-    text.append(createSvg("title", {}, tips.numeralTip(numeral, state.noteName(tonic), mode, triad)));
+    text.append(createSvg("title", {}, tips.numeralTip(numeral, state.tonicName(), mode, triad)));
     return text;
   }));
 
-  keyName.textContent = state.noteName(tonic);
+  keyName.textContent = state.tonicName();
   modeName.textContent = mode.name;
 
   noteGroup.classList.toggle("locked", state.isNoteRingLocked());
@@ -77,7 +77,7 @@ function renderSelectedNote() {
   const tonic = state.tonicIndex();
   const start = state.currentModeIndex();
   const rootName = state.noteName(note);
-  const tonicName = state.noteName(tonic);
+  const tonicName = state.tonicName();
   chordPanelTitle.textContent = `Chords on ${rootName}`;
 
   // Panel rows: the current mode first, then the rest in order.
@@ -149,14 +149,8 @@ function renderSelectedNote() {
 // Spell out a chord's notes under the wheel, with each note's scale degree
 // in the parallel mode it was chosen from (in C Lydian, D is D F♯ A: 2 ♯4 6).
 function renderSpelledChord(rootName, suffix, mode) {
-  const tonic = state.tonicIndex();
   const names = spellChord(rootName, chordType(suffix));
-
-  // If the tonic's spelling hasn't been chosen (it isn't the selected note),
-  // use whichever spelling gives the degrees the fewest accidentals.
-  const tonicName = state.selectedNote() === tonic
-    ? state.noteName(tonic)
-    : bestTonicSpelling(tonic, names);
+  const tonicName = state.tonicName();
   const type = chordType(suffix);
   const degreeLabels = names.map((name) => scaleDegree(tonicName, name));
 
@@ -192,19 +186,14 @@ function renderSpelledChord(rootName, suffix, mode) {
   }));
 }
 
-function bestTonicSpelling(tonic, names) {
-  const accidentals = (tonicName) =>
-    names.map((name) => scaleDegree(tonicName, name)).join("").replace(/\d/g, "").length;
-  return spellings(tonic).reduce((best, name) => (accidentals(name) < accidentals(best) ? name : best));
-}
-
 makeDraggable(svg, noteGroup, {
   getRotation: state.getNoteRotation,
   setRotation: state.setNoteRotation,
   step: state.NOTE_STEP,
   onChange: render,
   canDrag: () => !state.isNoteRingLocked(),
-  // Click a note to select it; click it again to change its spelling.
+  // Click a note to select it; click it again to change its spelling
+  // (the tonic, or a black key outside the mode).
   onTap: (target) => {
     const note = noteRing.indexOf(target);
     if (note === -1) return;
