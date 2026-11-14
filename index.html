@@ -19,38 +19,71 @@
       touch-action: none; /* Let us handle touch drags instead of scrolling. */
       user-select: none;
     }
-    #segments { cursor: grab; }
-    #segments.dragging { cursor: grabbing; }
+    .ring { cursor: grab; }
+    .ring.dragging { cursor: grabbing; }
   </style>
 </head>
 <body>
   <h1>Mode Wheel</h1>
   <svg id="wheel" viewBox="-220 -220 440 440">
-    <g id="segments"></g>
+    <g id="note-ring" class="ring"></g>
+    <g id="mode-ring" class="ring"></g>
     <g id="numerals"></g>
-    <text id="key-name" x="0" y="-8" text-anchor="middle" font-size="32" font-weight="bold"></text>
-    <text id="mode-name" x="0" y="24" text-anchor="middle" font-size="18">Ionian</text>
+    <text id="key-name" x="0" y="-6" text-anchor="middle" font-size="26" font-weight="bold"></text>
+    <text id="mode-name" x="0" y="20" text-anchor="middle" font-size="14"></text>
   </svg>
 
   <script>
     const NOTES = ["C", "C♯/D♭", "D", "D♯/E♭", "E", "F", "F♯/G♭", "G", "G♯/A♭", "A", "A♯/B♭", "B"];
-    const SVG_NS = "http://www.w3.org/2000/svg";
-    const STEP = 360 / NOTES.length;
 
-    // Semitones above the tonic for each note of the Ionian (major) mode,
-    // with the Roman numeral for the chord built on that degree.
-    const IONIAN = [0, 2, 4, 5, 7, 9, 11];
-    const IONIAN_NUMERALS = ["I", "ii", "iii", "IV", "V", "vi", "vii°"];
+    // Each mode: semitones above the tonic, and the Roman numeral of the
+    // chord built on each degree.
+    const MODES = [
+      { name: "Ionian",     intervals: [0, 2, 4, 5, 7, 9, 11], numerals: ["I", "ii", "iii", "IV", "V", "vi", "vii°"] },
+      { name: "Dorian",     intervals: [0, 2, 3, 5, 7, 9, 10], numerals: ["i", "ii", "♭III", "IV", "v", "vi°", "♭VII"] },
+      { name: "Phrygian",   intervals: [0, 1, 3, 5, 7, 8, 10], numerals: ["i", "♭II", "♭III", "iv", "v°", "♭VI", "♭vii"] },
+      { name: "Lydian",     intervals: [0, 2, 4, 6, 7, 9, 11], numerals: ["I", "II", "iii", "♯iv°", "V", "vi", "vii"] },
+      { name: "Mixolydian", intervals: [0, 2, 4, 5, 7, 9, 10], numerals: ["I", "ii", "iii°", "IV", "v", "vi", "♭VII"] },
+      { name: "Aeolian",    intervals: [0, 2, 3, 5, 7, 8, 10], numerals: ["i", "ii°", "♭III", "iv", "v", "♭VI", "♭VII"] },
+      { name: "Locrian",    intervals: [0, 1, 3, 5, 6, 8, 10], numerals: ["i°", "♭II", "♭iii", "iv", "♭V", "♭VI", "♭vii"] },
+    ];
+
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const NOTE_STEP = 360 / NOTES.length;
+    const MODE_STEP = 360 / MODES.length;
 
     const svg = document.getElementById("wheel");
-    const group = document.getElementById("segments");
 
-    const outerRadius = 180;
-    const innerRadius = 100;
-    const labelRadius = (outerRadius + innerRadius) / 2;
+    // Ring sizes: notes on the outside, modes inside, key/mode label in the center.
+    const NOTE_OUTER = 180, NOTE_INNER = 130;
+    const MODE_OUTER = 130, MODE_INNER = 75;
+    const NUMERAL_RADIUS = NOTE_OUTER + 20;
 
-    // How far the wheel is turned, in degrees clockwise.
-    let rotation = 0;
+    // Relative modes: all modes share the notes of one parent major (Ionian)
+    // scale. parentRotation sets the parent key; modeRotation picks the mode.
+    // The outer ring's rotation is derived from both, so spinning the inner
+    // ring carries the outer ring along to the new mode's tonic.
+    let parentRotation = 0; // degrees clockwise
+    let modeRotation = 0;   // degrees clockwise
+
+    // Semitones from the parent tonic to the tonic of the mode at the top.
+    // Interpolated between modes so the outer ring turns smoothly mid-drag.
+    function modeOffsetSemitones() {
+      const PARENT = MODES[0].intervals;
+      const position = -modeRotation / MODE_STEP;
+      const semitonesAt = (n) => {
+        const wraps = Math.floor(n / PARENT.length);
+        return wraps * NOTES.length + PARENT[n - wraps * PARENT.length];
+      };
+      const n = Math.floor(position);
+      const fraction = position - n;
+      return semitonesAt(n) + fraction * (semitonesAt(n + 1) - semitonesAt(n));
+    }
+
+    // How far the outer ring is turned.
+    function noteRotation() {
+      return parentRotation - modeOffsetSemitones() * NOTE_STEP;
+    }
 
     // Convert a wheel angle (0 = straight up, clockwise, in degrees) to x/y.
     function point(radius, degrees) {
@@ -58,77 +91,94 @@
       return [Math.cos(rad) * radius, Math.sin(rad) * radius];
     }
 
-    // The note currently under the "I" at the top (the tonic).
-    function selectedIndex() {
-      const steps = Math.round(-rotation / STEP);
-      return ((steps % NOTES.length) + NOTES.length) % NOTES.length;
+    // Path for a ring segment between two angles.
+    function segmentPath(inner, outer, start, end) {
+      const [ox1, oy1] = point(outer, start);
+      const [ox2, oy2] = point(outer, end);
+      const [ix2, iy2] = point(inner, end);
+      const [ix1, iy1] = point(inner, start);
+      return [
+        `M ${ox1} ${oy1}`,
+        `A ${outer} ${outer} 0 0 1 ${ox2} ${oy2}`,
+        `L ${ix2} ${iy2}`,
+        `A ${inner} ${inner} 0 0 0 ${ix1} ${iy1}`,
+        "Z",
+      ].join(" ");
     }
 
-    // Build one segment and one label per note.
-    const segments = NOTES.map((note) => {
-      const path = document.createElementNS(SVG_NS, "path");
-      path.setAttribute("stroke", "black");
-      group.appendChild(path);
+    // Which item of a ring sits at the top, given its rotation.
+    function topIndex(rotation, step, count) {
+      const steps = Math.round(-rotation / step);
+      return ((steps % count) + count) % count;
+    }
 
-      const label = document.createElementNS(SVG_NS, "text");
-      label.setAttribute("text-anchor", "middle");
-      label.setAttribute("dominant-baseline", "central");
-      label.setAttribute("font-size", "16");
-      label.textContent = note;
-      group.appendChild(label);
+    function makeText(fontSize, content) {
+      const text = document.createElementNS(SVG_NS, "text");
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("dominant-baseline", "central");
+      text.setAttribute("font-size", fontSize);
+      text.textContent = content;
+      return text;
+    }
 
-      return { path, label };
-    });
+    // Build the segments and labels for a ring.
+    function buildRing(group, labels, fontSize) {
+      return labels.map((labelText) => {
+        const path = document.createElementNS(SVG_NS, "path");
+        path.setAttribute("stroke", "black");
+        group.appendChild(path);
+        const label = makeText(fontSize, labelText);
+        group.appendChild(label);
+        return { path, label };
+      });
+    }
 
-    // Redraw the wheel at the current rotation. Labels move but stay upright.
-    function render() {
-      const selected = selectedIndex();
-      document.getElementById("key-name").textContent = NOTES[selected];
+    const noteSegments = buildRing(document.getElementById("note-ring"), NOTES, 16);
+    const modeSegments = buildRing(document.getElementById("mode-ring"), MODES.map((m) => m.name), 12);
+
+    // Position a ring's segments and labels. Labels move but stay upright.
+    function layoutRing(segments, inner, outer, step, rotation, fillFor) {
       segments.forEach(({ path, label }, i) => {
-        const center = i * STEP + rotation;
-        const start = center - STEP / 2;
-        const end = center + STEP / 2;
-
-        const [ox1, oy1] = point(outerRadius, start);
-        const [ox2, oy2] = point(outerRadius, end);
-        const [ix2, iy2] = point(innerRadius, end);
-        const [ix1, iy1] = point(innerRadius, start);
-
-        path.setAttribute("d", [
-          `M ${ox1} ${oy1}`,
-          `A ${outerRadius} ${outerRadius} 0 0 1 ${ox2} ${oy2}`,
-          `L ${ix2} ${iy2}`,
-          `A ${innerRadius} ${innerRadius} 0 0 0 ${ix1} ${iy1}`,
-          "Z",
-        ].join(" "));
-        const interval = (i - selected + NOTES.length) % NOTES.length;
-        let fill = "white";
-        if (interval === 0) fill = "gold";               // Tonic, under the "I".
-        else if (IONIAN.includes(interval)) fill = "lightyellow"; // Other mode notes.
-        path.setAttribute("fill", fill);
-
-        const [lx, ly] = point(labelRadius, center);
+        const center = i * step + rotation;
+        path.setAttribute("d", segmentPath(inner, outer, center - step / 2, center + step / 2));
+        path.setAttribute("fill", fillFor(i));
+        const [lx, ly] = point((inner + outer) / 2, center);
         label.setAttribute("x", lx);
         label.setAttribute("y", ly);
       });
     }
 
-    // Roman numerals stay fixed outside the ring, one per mode degree.
-    // "I" sits at the top and marks the tonic.
-    const numeralRadius = outerRadius + 20;
     const numeralGroup = document.getElementById("numerals");
-    IONIAN.forEach((interval, degree) => {
-      const [x, y] = point(numeralRadius, interval * STEP);
-      const text = document.createElementNS(SVG_NS, "text");
-      text.setAttribute("x", x);
-      text.setAttribute("y", y);
-      text.setAttribute("text-anchor", "middle");
-      text.setAttribute("dominant-baseline", "central");
-      text.setAttribute("font-size", "16");
-      text.setAttribute("font-weight", "bold");
-      text.textContent = IONIAN_NUMERALS[degree];
-      numeralGroup.appendChild(text);
-    });
+
+    function render() {
+      const tonic = topIndex(noteRotation(), NOTE_STEP, NOTES.length);
+      const mode = MODES[topIndex(modeRotation, MODE_STEP, MODES.length)];
+
+      // Outer ring: tonic gold, other notes of the mode light yellow.
+      layoutRing(noteSegments, NOTE_INNER, NOTE_OUTER, NOTE_STEP, noteRotation(), (i) => {
+        const interval = (i - tonic + NOTES.length) % NOTES.length;
+        if (interval === 0) return "gold";
+        if (mode.intervals.includes(interval)) return "lightyellow";
+        return "white";
+      });
+
+      // Inner ring: the selected mode is gold.
+      layoutRing(modeSegments, MODE_INNER, MODE_OUTER, MODE_STEP, modeRotation, (i) =>
+        MODES[i] === mode ? "gold" : "white");
+
+      // Roman numerals stay fixed outside the ring, one per mode degree.
+      numeralGroup.replaceChildren(...mode.intervals.map((interval, degree) => {
+        const text = makeText(16, mode.numerals[degree]);
+        const [x, y] = point(NUMERAL_RADIUS, interval * NOTE_STEP);
+        text.setAttribute("x", x);
+        text.setAttribute("y", y);
+        text.setAttribute("font-weight", "bold");
+        return text;
+      }));
+
+      document.getElementById("key-name").textContent = NOTES[tonic];
+      document.getElementById("mode-name").textContent = mode.name;
+    }
 
     // Angle of a pointer event around the wheel's center (0 = up, clockwise).
     function eventAngle(event) {
@@ -139,32 +189,41 @@
       return Math.atan2(y, x) * 180 / Math.PI + 90;
     }
 
-    // Dragging: turn the wheel with the pointer, then snap to the nearest note.
-    let dragStartAngle = null;
-    let dragStartRotation = 0;
+    // Dragging: turn a ring with the pointer, then snap to the nearest step.
+    function makeDraggable(group, getRotation, setRotation, step) {
+      let startAngle = null;
+      let startRotation = 0;
 
-    group.addEventListener("pointerdown", (event) => {
-      dragStartAngle = eventAngle(event);
-      dragStartRotation = rotation;
-      group.setPointerCapture(event.pointerId);
-      group.classList.add("dragging");
-    });
+      group.addEventListener("pointerdown", (event) => {
+        startAngle = eventAngle(event);
+        startRotation = getRotation();
+        group.setPointerCapture(event.pointerId);
+        group.classList.add("dragging");
+      });
 
-    group.addEventListener("pointermove", (event) => {
-      if (dragStartAngle === null) return;
-      rotation = dragStartRotation + (eventAngle(event) - dragStartAngle);
-      render();
-    });
+      group.addEventListener("pointermove", (event) => {
+        if (startAngle === null) return;
+        setRotation(startRotation + (eventAngle(event) - startAngle));
+        render();
+      });
 
-    function endDrag() {
-      if (dragStartAngle === null) return;
-      dragStartAngle = null;
-      group.classList.remove("dragging");
-      rotation = Math.round(rotation / STEP) * STEP;
-      render();
+      function endDrag() {
+        if (startAngle === null) return;
+        startAngle = null;
+        group.classList.remove("dragging");
+        setRotation(Math.round(getRotation() / step) * step);
+        render();
+      }
+      group.addEventListener("pointerup", endDrag);
+      group.addEventListener("pointercancel", endDrag);
     }
-    group.addEventListener("pointerup", endDrag);
-    group.addEventListener("pointercancel", endDrag);
+
+    // Dragging the outer ring changes the key and keeps the mode.
+    makeDraggable(document.getElementById("note-ring"),
+      noteRotation, (r) => { parentRotation += r - noteRotation(); }, NOTE_STEP);
+    // Dragging the inner ring changes the mode and keeps the notes.
+    makeDraggable(document.getElementById("mode-ring"),
+      () => modeRotation, (r) => { modeRotation = r; }, MODE_STEP);
 
     render();
   </script>
