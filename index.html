@@ -25,9 +25,9 @@
 </head>
 <body>
   <h1>Mode Wheel</h1>
-  <svg id="wheel" viewBox="-200 -200 400 400">
+  <svg id="wheel" viewBox="-220 -220 440 440">
     <g id="segments"></g>
-    <polygon id="pointer" fill="black"></polygon>
+    <g id="numerals"></g>
   </svg>
 
   <script>
@@ -35,8 +35,10 @@
     const SVG_NS = "http://www.w3.org/2000/svg";
     const STEP = 360 / NOTES.length;
 
-    // Semitones above the tonic for each note of the Ionian (major) mode.
+    // Semitones above the tonic for each note of the Ionian (major) mode,
+    // with the Roman numeral for the chord built on that degree.
     const IONIAN = [0, 2, 4, 5, 7, 9, 11];
+    const IONIAN_NUMERALS = ["I", "ii", "iii", "IV", "V", "vi", "vii°"];
 
     const svg = document.getElementById("wheel");
     const group = document.getElementById("segments");
@@ -54,7 +56,7 @@
       return [Math.cos(rad) * radius, Math.sin(rad) * radius];
     }
 
-    // The note currently under the pointer at the top.
+    // The note currently under the "I" at the top (the tonic).
     function selectedIndex() {
       const steps = Math.round(-rotation / STEP);
       return ((steps % NOTES.length) + NOTES.length) % NOTES.length;
@@ -98,7 +100,7 @@
         ].join(" "));
         const interval = (i - selected + NOTES.length) % NOTES.length;
         let fill = "white";
-        if (interval === 0) fill = "gold";               // Tonic, under the pointer.
+        if (interval === 0) fill = "gold";               // Tonic, under the "I".
         else if (IONIAN.includes(interval)) fill = "lightyellow"; // Other mode notes.
         path.setAttribute("fill", fill);
 
@@ -108,10 +110,22 @@
       });
     }
 
-    // Downward-pointing triangle just above the top segment.
-    const tipY = -outerRadius - 2;
-    document.getElementById("pointer")
-      .setAttribute("points", `-10,${tipY - 16} 10,${tipY - 16} 0,${tipY}`);
+    // Roman numerals stay fixed outside the ring, one per mode degree.
+    // "I" sits at the top and marks the tonic.
+    const numeralRadius = outerRadius + 20;
+    const numeralGroup = document.getElementById("numerals");
+    IONIAN.forEach((interval, degree) => {
+      const [x, y] = point(numeralRadius, interval * STEP);
+      const text = document.createElementNS(SVG_NS, "text");
+      text.setAttribute("x", x);
+      text.setAttribute("y", y);
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("dominant-baseline", "central");
+      text.setAttribute("font-size", "16");
+      text.setAttribute("font-weight", "bold");
+      text.textContent = IONIAN_NUMERALS[degree];
+      numeralGroup.appendChild(text);
+    });
 
     // Angle of a pointer event around the wheel's center (0 = up, clockwise).
     function eventAngle(event) {
