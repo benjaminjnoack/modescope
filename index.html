@@ -28,6 +28,8 @@
   <svg id="wheel" viewBox="-220 -220 440 440">
     <g id="segments"></g>
     <g id="numerals"></g>
+    <text id="key-name" x="0" y="-8" text-anchor="middle" font-size="32" font-weight="bold"></text>
+    <text id="mode-name" x="0" y="24" text-anchor="middle" font-size="18">Ionian</text>
   </svg>
 
   <script>
@@ -81,6 +83,7 @@
     // Redraw the wheel at the current rotation. Labels move but stay upright.
     function render() {
       const selected = selectedIndex();
+      document.getElementById("key-name").textContent = NOTES[selected];
       segments.forEach(({ path, label }, i) => {
         const center = i * STEP + rotation;
         const start = center - STEP / 2;
