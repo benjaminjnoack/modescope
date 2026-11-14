@@ -15,7 +15,7 @@ export const MODES = [
 ];
 
 // Chord types. Each tone is [degree, semitones above the root]; the degree
-// (1, 3, 5, 7, 9, 11, 13, or 2/4 for sus chords) decides which letter spells it.
+// (1, 3, 5, 6, 7, 9, 11, 13, or 2/4 for sus chords) decides which letter spells it.
 // A chord is available in a mode when every one of its notes is in the mode.
 // 13th chords leave out the 11th, as is usual in practice.
 export const CHORD_TYPES = [
@@ -25,6 +25,8 @@ export const CHORD_TYPES = [
   { suffix: "5",     name: "power chord (root and 5th, no 3rd)", tones: [[1, 0], [5, 7]] },
   { suffix: "sus2",  name: "suspended 2nd (the 2nd replaces the 3rd)", tones: [[1, 0], [2, 2], [5, 7]] },
   { suffix: "sus4",  name: "suspended 4th (the 4th replaces the 3rd)", tones: [[1, 0], [4, 5], [5, 7]] },
+  { suffix: "6",     name: "major 6th (a major triad with an added 6th)", tones: [[1, 0], [3, 4], [5, 7], [6, 9]] },
+  { suffix: "m6",    name: "minor 6th (a minor triad with an added major 6th)", tones: [[1, 0], [3, 3], [5, 7], [6, 9]] },
   { suffix: "7",     name: "dominant 7th", tones: [[1, 0], [3, 4], [5, 7], [7, 10]] },
   { suffix: "maj7",  name: "major 7th", tones: [[1, 0], [3, 4], [5, 7], [7, 11]] },
   { suffix: "m7",    name: "minor 7th", tones: [[1, 0], [3, 3], [5, 7], [7, 10]] },
@@ -45,7 +47,7 @@ const LETTERS = "CDEFGAB";
 const LETTER_SEMITONES = [0, 2, 4, 5, 7, 9, 11];
 
 // Semitones above the root for each chord degree in a major scale.
-const MAJOR_DEGREES = { 1: 0, 2: 2, 3: 4, 4: 5, 5: 7, 7: 11, 9: 14, 11: 17, 13: 21 };
+const MAJOR_DEGREES = { 1: 0, 2: 2, 3: 4, 4: 5, 5: 7, 6: 9, 7: 11, 9: 14, 11: 17, 13: 21 };
 
 // A chord type's formula, counted from its own root: "1 ♭3 5 ♭7" for m7.
 export function chordFormula(type) {
