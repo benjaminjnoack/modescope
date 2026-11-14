@@ -2,6 +2,8 @@
 
 Modescope is a single-page, dependency-free web app: an SVG wheel for exploring the seven diatonic modes and the chords in them. `README.md` describes the user-facing behavior in detail; read it before changing behavior, and keep it in sync when you do.
 
+`ABOUT.md` explains why the project exists and what it's for: showing the modes as one rotating ring, and making modal interchange (borrowed chords) visible. Use its goals to judge whether a change fits. Prefer changes that make those ideas clearer over adding features.
+
 ## Running
 
 ```
