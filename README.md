@@ -91,3 +91,7 @@ Every push to `master` publishes `public/` to GitHub Pages, using the workflow i
 - **Change a mode's Roman numerals or description:** edit `MODES` in `music.js`.
 - **Change colors or fonts:** edit `styles.css`. Segments use the classes `selected` (gold) and `in-mode` (light yellow).
 - **Change tooltip wording:** edit `tooltips.js`.
+
+## License
+
+[MIT](LICENSE)
