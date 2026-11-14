@@ -1,6 +1,6 @@
 // Builds the wheel and keeps it in sync with the state.
 
-import { NOTES, MODES, chordsOn, chordType, spellChord } from "./music.js";
+import { MODES, NOTES, chordsOn, chordType, scaleDegree, spellChord, spellings } from "./music.js";
 import * as state from "./state.js";
 import { createRing } from "./ring.js";
 import { makeDraggable } from "./drag.js";
@@ -75,18 +75,23 @@ function renderSelectedNote() {
 
   // Panel rows: the current mode first, then the rest in order.
   const rows = MODES.map((_, offset) => {
-    const mode = MODES[(start + offset) % MODES.length];
-    return { mode, offset, result: chordsOn(mode, tonic, note) };
+    const modeIndex = (start + offset) % MODES.length;
+    const mode = MODES[modeIndex];
+    return { mode, modeIndex, offset, result: chordsOn(mode, tonic, note) };
   });
 
   // The chord to spell: the one clicked, or the panel's first chord if
   // nothing was clicked or the clicked chord is no longer listed.
-  const listed = rows.flatMap(({ result }) => (result ? result.chords : []));
-  if (!listed.includes(state.selectedChord())) state.selectChord(listed[0]);
+  const listed = rows.flatMap(({ modeIndex, result }) =>
+    (result ? result.chords.map((suffix) => ({ suffix, mode: modeIndex })) : []));
+  const sameChord = (a, b) => a && b && a.suffix === b.suffix && a.mode === b.mode;
+  if (!listed.some((choice) => sameChord(choice, state.selectedChord()))) {
+    state.selectChord(listed[0]);
+  }
   const chord = state.selectedChord();
-  renderSpelledChord(rootName, chord);
+  renderSpelledChord(rootName, chord.suffix, MODES[chord.mode]);
 
-  chordList.replaceChildren(...rows.map(({ mode, offset, result }) => {
+  chordList.replaceChildren(...rows.map(({ mode, modeIndex, offset, result }) => {
     const item = document.createElement("li");
     item.classList.toggle("current", offset === 0);
     item.classList.toggle("absent", result === null);
@@ -110,9 +115,13 @@ function renderSelectedNote() {
         const button = document.createElement("button");
         button.type = "button";
         button.textContent = rootName + suffix;
-        button.classList.toggle("spelled", suffix === chord);
+        // The exact chord clicked is emphasized; the same chord in other
+        // modes gets a lighter highlight.
+        const choice = { suffix, mode: modeIndex };
+        button.classList.toggle("spelled", sameChord(choice, chord));
+        button.classList.toggle("same-chord", suffix === chord.suffix && !sameChord(choice, chord));
         button.addEventListener("click", () => {
-          state.selectChord(suffix);
+          state.selectChord(choice);
           render();
         });
         item.append(button);
@@ -124,10 +133,21 @@ function renderSelectedNote() {
   }));
 }
 
-// Spell out a chord's notes under the wheel, with each note's degree.
-function renderSpelledChord(rootName, suffix) {
-  spelledName.textContent = rootName + suffix;
-  spelledNotes.replaceChildren(...spellChord(rootName, chordType(suffix)).map(({ name, degree }) => {
+// Spell out a chord's notes under the wheel, with each note's scale degree
+// in the parallel mode it was chosen from (in C Lydian, D is D F♯ A: 2 ♯4 6).
+function renderSpelledChord(rootName, suffix, mode) {
+  const tonic = state.tonicIndex();
+  const names = spellChord(rootName, chordType(suffix));
+
+  // If the tonic's spelling hasn't been chosen (it isn't the selected note),
+  // use whichever spelling gives the degrees the fewest accidentals.
+  const tonicName = state.selectedNote() === tonic
+    ? state.noteName(tonic)
+    : bestTonicSpelling(tonic, names);
+  spelledName.textContent = `${rootName}${suffix} in ${tonicName} ${mode.name}`;
+
+  spelledNotes.replaceChildren(...names.map((name) => {
+    const degree = scaleDegree(tonicName, name);
     const item = document.createElement("li");
     const noteLabel = document.createElement("span");
     noteLabel.className = "spelled-note";
@@ -138,6 +158,12 @@ function renderSpelledChord(rootName, suffix) {
     item.append(noteLabel, degreeLabel);
     return item;
   }));
+}
+
+function bestTonicSpelling(tonic, names) {
+  const accidentals = (tonicName) =>
+    names.map((name) => scaleDegree(tonicName, name)).join("").replace(/\d/g, "").length;
+  return spellings(tonic).reduce((best, name) => (accidentals(name) < accidentals(best) ? name : best));
 }
 
 makeDraggable(svg, noteGroup, {

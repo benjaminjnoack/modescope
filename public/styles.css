@@ -117,9 +117,14 @@ body {
   padding: 0.1rem 0.4rem;
   cursor: pointer;
 }
+/* The chord being spelled, and the same chord in other modes. */
 .chords button.spelled {
   background: black;
   color: white;
+  font-weight: bold;
+}
+.chords button.same-chord {
+  background: lightgray;
 }
 
 /* Spelled chord, under the wheel */

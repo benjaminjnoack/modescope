@@ -14,8 +14,9 @@ let parentRotation = 0;
 let modeRotation = 0;
 let noteRingLocked = false;
 // The selected note (an index into NOTES), which of its spellings to use
-// (e.g. 0 = "C♯", 1 = "D♭"), and the chord on it to spell out (a chord
-// suffix such as "m7", or null for the panel's first chord). There is
+// (e.g. 0 = "C♯", 1 = "D♭"), and the chord on it to spell out: the chord
+// suffix (e.g. "m7") and the index of the parallel mode it was chosen from,
+// as { suffix, mode }, or null for the panel's first chord. There is
 // always exactly one selected note. It starts as the top note and moves
 // with the ring as it turns.
 let selection = { note: 0, spelling: 0, chord: null };
@@ -74,8 +75,8 @@ export function selectedChord() {
   return selection.chord;
 }
 
-export function selectChord(suffix) {
-  selection = { ...selection, chord: suffix };
+export function selectChord(chord) {
+  selection = { ...selection, chord };
 }
 
 // The name of a note: the chosen spelling for the selected note, and every

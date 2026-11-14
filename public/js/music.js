@@ -41,8 +41,6 @@ export function chordType(suffix) {
 
 const LETTERS = "CDEFGAB";
 const LETTER_SEMITONES = [0, 2, 4, 5, 7, 9, 11];
-// Semitones above the root for each degree in a major scale.
-const MAJOR_DEGREES = { 1: 0, 3: 4, 4: 5, 5: 7, 7: 11, 9: 14, 11: 17, 13: 21 };
 
 // "♭" for -1, "♯♯" for 2, and so on.
 function accidental(offset) {
@@ -54,22 +52,34 @@ function wrapOffset(semitones) {
   return ((semitones % 12) + 18) % 12 - 6;
 }
 
-// Spell a chord from its root's name (e.g. "D♭") and its type. Each degree
-// gets its own letter (a 3rd is two letters above the root), so D♭m is
-// D♭ F♭ A♭, not D♭ E A♭. Returns [{ name, degree }], e.g. degree "♭3".
-export function spellChord(rootName, type) {
-  const rootLetter = LETTERS.indexOf(rootName[0]);
-  const rootOffset = [...rootName.slice(1)].reduce((sum, c) => sum + (c === "♯" ? 1 : -1), 0);
-  const rootSemitones = LETTER_SEMITONES[rootLetter] + rootOffset;
+// Split a note name like "D♭" into its letter index and semitones.
+function parseNote(name) {
+  const letter = LETTERS.indexOf(name[0]);
+  const offset = [...name.slice(1)].reduce((sum, c) => sum + (c === "♯" ? 1 : -1), 0);
+  return { letter, semitones: LETTER_SEMITONES[letter] + offset };
+}
 
+// Spell a chord from its root's name (e.g. "D♭") and its type. Each chord
+// tone gets its own letter (a 3rd is two letters above the root), so D♭m
+// is D♭ F♭ A♭, not D♭ E A♭. Returns the note names.
+export function spellChord(rootName, type) {
+  const root = parseNote(rootName);
   return type.tones.map(([degree, semitones]) => {
-    const letter = (rootLetter + degree - 1) % LETTERS.length;
-    const offset = wrapOffset(rootSemitones + semitones - LETTER_SEMITONES[letter]);
-    return {
-      name: LETTERS[letter] + accidental(offset),
-      degree: accidental(semitones - MAJOR_DEGREES[degree]) + degree,
-    };
+    const letter = (root.letter + degree - 1) % LETTERS.length;
+    const offset = wrapOffset(root.semitones + semitones - LETTER_SEMITONES[letter]);
+    return LETTERS[letter] + accidental(offset);
   });
+}
+
+// A note's scale degree above a tonic, compared with the tonic's major
+// scale: above C, F♯ is "♯4" and B♭ is "♭7". Both are note names.
+export function scaleDegree(tonicName, noteName) {
+  const tonic = parseNote(tonicName);
+  const note = parseNote(noteName);
+  const steps = (note.letter - tonic.letter + LETTERS.length) % LETTERS.length;
+  const majorSemitones = LETTER_SEMITONES[steps]; // Major scale = C major's letter steps.
+  const offset = wrapOffset(note.semitones - tonic.semitones - majorSemitones);
+  return accidental(offset) + (steps + 1);
 }
 
 
