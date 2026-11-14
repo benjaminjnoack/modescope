@@ -16,22 +16,34 @@
       width: 100%;
       max-width: 400px;
       height: auto;
+      touch-action: none; /* Let us handle touch drags instead of scrolling. */
+      user-select: none;
     }
+    #segments { cursor: grab; }
+    #segments.dragging { cursor: grabbing; }
   </style>
 </head>
 <body>
   <h1>Mode Wheel</h1>
-  <svg id="wheel" viewBox="-200 -200 400 400"></svg>
+  <svg id="wheel" viewBox="-200 -200 400 400">
+    <g id="segments"></g>
+    <polygon id="pointer" fill="black"></polygon>
+  </svg>
 
   <script>
     const NOTES = ["C", "C♯/D♭", "D", "D♯/E♭", "E", "F", "F♯/G♭", "G", "G♯/A♭", "A", "A♯/B♭", "B"];
     const SVG_NS = "http://www.w3.org/2000/svg";
+    const STEP = 360 / NOTES.length;
+
     const svg = document.getElementById("wheel");
+    const group = document.getElementById("segments");
 
     const outerRadius = 180;
     const innerRadius = 100;
     const labelRadius = (outerRadius + innerRadius) / 2;
-    const selectedIndex = 0; // The segment under the pointer (top of the wheel).
+
+    // How far the wheel is turned, in degrees clockwise.
+    let rotation = 0;
 
     // Convert a wheel angle (0 = straight up, clockwise, in degrees) to x/y.
     function point(radius, degrees) {
@@ -39,46 +51,98 @@
       return [Math.cos(rad) * radius, Math.sin(rad) * radius];
     }
 
-    NOTES.forEach((note, i) => {
-      // Each note gets a 30-degree segment centered on its position.
-      const center = i * 30;
-      const start = center - 15;
-      const end = center + 15;
+    // The note currently under the pointer at the top.
+    function selectedIndex() {
+      const steps = Math.round(-rotation / STEP);
+      return ((steps % NOTES.length) + NOTES.length) % NOTES.length;
+    }
 
-      const [ox1, oy1] = point(outerRadius, start);
-      const [ox2, oy2] = point(outerRadius, end);
-      const [ix2, iy2] = point(innerRadius, end);
-      const [ix1, iy1] = point(innerRadius, start);
+    // Build one segment and one label per note.
+    const segments = NOTES.map((note) => {
+      const path = document.createElementNS(SVG_NS, "path");
+      path.setAttribute("stroke", "black");
+      group.appendChild(path);
 
-      const segment = document.createElementNS(SVG_NS, "path");
-      segment.setAttribute("d", [
-        `M ${ox1} ${oy1}`,
-        `A ${outerRadius} ${outerRadius} 0 0 1 ${ox2} ${oy2}`,
-        `L ${ix2} ${iy2}`,
-        `A ${innerRadius} ${innerRadius} 0 0 0 ${ix1} ${iy1}`,
-        "Z",
-      ].join(" "));
-      segment.setAttribute("fill", i === selectedIndex ? "gold" : "white");
-      segment.setAttribute("stroke", "black");
-      svg.appendChild(segment);
-
-      const [lx, ly] = point(labelRadius, center);
       const label = document.createElementNS(SVG_NS, "text");
-      label.setAttribute("x", lx);
-      label.setAttribute("y", ly);
       label.setAttribute("text-anchor", "middle");
       label.setAttribute("dominant-baseline", "central");
       label.setAttribute("font-size", "16");
       label.textContent = note;
-      svg.appendChild(label);
+      group.appendChild(label);
+
+      return { path, label };
     });
 
+    // Redraw the wheel at the current rotation. Labels move but stay upright.
+    function render() {
+      const selected = selectedIndex();
+      segments.forEach(({ path, label }, i) => {
+        const center = i * STEP + rotation;
+        const start = center - STEP / 2;
+        const end = center + STEP / 2;
+
+        const [ox1, oy1] = point(outerRadius, start);
+        const [ox2, oy2] = point(outerRadius, end);
+        const [ix2, iy2] = point(innerRadius, end);
+        const [ix1, iy1] = point(innerRadius, start);
+
+        path.setAttribute("d", [
+          `M ${ox1} ${oy1}`,
+          `A ${outerRadius} ${outerRadius} 0 0 1 ${ox2} ${oy2}`,
+          `L ${ix2} ${iy2}`,
+          `A ${innerRadius} ${innerRadius} 0 0 0 ${ix1} ${iy1}`,
+          "Z",
+        ].join(" "));
+        path.setAttribute("fill", i === selected ? "gold" : "white");
+
+        const [lx, ly] = point(labelRadius, center);
+        label.setAttribute("x", lx);
+        label.setAttribute("y", ly);
+      });
+    }
+
     // Downward-pointing triangle just above the top segment.
-    const pointer = document.createElementNS(SVG_NS, "polygon");
     const tipY = -outerRadius - 2;
-    pointer.setAttribute("points", `-10,${tipY - 16} 10,${tipY - 16} 0,${tipY}`);
-    pointer.setAttribute("fill", "black");
-    svg.appendChild(pointer);
+    document.getElementById("pointer")
+      .setAttribute("points", `-10,${tipY - 16} 10,${tipY - 16} 0,${tipY}`);
+
+    // Angle of a pointer event around the wheel's center (0 = up, clockwise).
+    function eventAngle(event) {
+      const pt = svg.createSVGPoint();
+      pt.x = event.clientX;
+      pt.y = event.clientY;
+      const { x, y } = pt.matrixTransform(svg.getScreenCTM().inverse());
+      return Math.atan2(y, x) * 180 / Math.PI + 90;
+    }
+
+    // Dragging: turn the wheel with the pointer, then snap to the nearest note.
+    let dragStartAngle = null;
+    let dragStartRotation = 0;
+
+    group.addEventListener("pointerdown", (event) => {
+      dragStartAngle = eventAngle(event);
+      dragStartRotation = rotation;
+      group.setPointerCapture(event.pointerId);
+      group.classList.add("dragging");
+    });
+
+    group.addEventListener("pointermove", (event) => {
+      if (dragStartAngle === null) return;
+      rotation = dragStartRotation + (eventAngle(event) - dragStartAngle);
+      render();
+    });
+
+    function endDrag() {
+      if (dragStartAngle === null) return;
+      dragStartAngle = null;
+      group.classList.remove("dragging");
+      rotation = Math.round(rotation / STEP) * STEP;
+      render();
+    }
+    group.addEventListener("pointerup", endDrag);
+    group.addEventListener("pointercancel", endDrag);
+
+    render();
   </script>
 </body>
 </html>
