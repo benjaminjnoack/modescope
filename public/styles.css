@@ -71,7 +71,7 @@ body {
 
 /* Chord panel */
 .chord-panel {
-  flex: 0 1 16rem;
+  flex: 0 1 22rem;
   min-width: 0;
 }
 .chord-panel h2 {
@@ -84,16 +84,29 @@ body {
   padding: 0;
   border: 1px solid black;
 }
-.chord-list li {
+.chord-list > li { padding: 0.5rem 0.75rem; }
+.chord-list > li + li { border-top: 1px solid black; }
+.chord-list > li.current { background: gold; }
+.chord-list > li.absent { color: gray; }
+
+.chord-header {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.5rem 0.75rem;
-}
-.chord-list li + li { border-top: 1px solid black; }
-.chord-list li.current {
-  background: gold;
   font-weight: bold;
 }
-.chord-list li.absent { color: gray; }
-.chord-name { white-space: pre; }
+
+/* Chord names wrap onto as many lines as needed. */
+.chords {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+.chords li {
+  border: 1px solid black;
+  background: white;
+  padding: 0.1rem 0.4rem;
+}

@@ -1,6 +1,6 @@
 // Builds the wheel and keeps it in sync with the state.
 
-import { NOTES, MODES, chordOn } from "./music.js";
+import { NOTES, MODES, chordsOn } from "./music.js";
 import * as state from "./state.js";
 import { createRing } from "./ring.js";
 import { makeDraggable } from "./drag.js";
@@ -67,20 +67,32 @@ function renderSelectedNote() {
   chordPanelTitle.textContent = `Chords on ${NOTES[note]}`;
   chordList.replaceChildren(...MODES.map((_, offset) => {
     const mode = MODES[(start + offset) % MODES.length];
-    const chord = chordOn(mode, tonic, note);
+    const result = chordsOn(mode, tonic, note);
     const item = document.createElement("li");
     item.classList.toggle("current", offset === 0);
-    item.classList.toggle("absent", chord === null);
+    item.classList.toggle("absent", result === null);
 
+    // Header: mode name, and the degree's Roman numeral.
+    const header = document.createElement("div");
+    header.className = "chord-header";
     const modeLabel = document.createElement("span");
-    modeLabel.className = "chord-mode";
     modeLabel.textContent = `${NOTES[tonic]} ${mode.name}`;
+    const numeral = document.createElement("span");
+    numeral.textContent = result ? result.numeral : "—";
+    header.append(modeLabel, numeral);
+    item.append(header);
 
-    const chordLabel = document.createElement("span");
-    chordLabel.className = "chord-name";
-    chordLabel.textContent = chord ? `${chord.numeral}  ${chord.name}` : "—";
-
-    item.append(modeLabel, chordLabel);
+    // The chords available on this note, as a wrapping list.
+    if (result) {
+      const chords = document.createElement("ul");
+      chords.className = "chords";
+      chords.append(...result.chords.map((name) => {
+        const chord = document.createElement("li");
+        chord.textContent = name;
+        return chord;
+      }));
+      item.append(chords);
+    }
     return item;
   }));
 }
