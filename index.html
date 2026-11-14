@@ -31,6 +31,7 @@
     const outerRadius = 180;
     const innerRadius = 100;
     const labelRadius = (outerRadius + innerRadius) / 2;
+    const selectedIndex = 0; // The segment under the pointer (top of the wheel).
 
     // Convert a wheel angle (0 = straight up, clockwise, in degrees) to x/y.
     function point(radius, degrees) {
@@ -57,7 +58,7 @@
         `A ${innerRadius} ${innerRadius} 0 0 0 ${ix1} ${iy1}`,
         "Z",
       ].join(" "));
-      segment.setAttribute("fill", "white");
+      segment.setAttribute("fill", i === selectedIndex ? "gold" : "white");
       segment.setAttribute("stroke", "black");
       svg.appendChild(segment);
 
@@ -71,6 +72,13 @@
       label.textContent = note;
       svg.appendChild(label);
     });
+
+    // Downward-pointing triangle just above the top segment.
+    const pointer = document.createElementNS(SVG_NS, "polygon");
+    const tipY = -outerRadius - 2;
+    pointer.setAttribute("points", `-10,${tipY - 16} 10,${tipY - 16} 0,${tipY}`);
+    pointer.setAttribute("fill", "black");
+    svg.appendChild(pointer);
   </script>
 </body>
 </html>
