@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mode Wheel</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 2rem 1rem;
+    }
+    svg {
+      width: 100%;
+      max-width: 400px;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mode Wheel</h1>
+  <svg id="wheel" viewBox="-200 -200 400 400"></svg>
+
+  <script>
+    const NOTES = ["C", "C♯/D♭", "D", "D♯/E♭", "E", "F", "F♯/G♭", "G", "G♯/A♭", "A", "A♯/B♭", "B"];
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const svg = document.getElementById("wheel");
+
+    const outerRadius = 180;
+    const labelRadius = 150;
+
+    const circle = document.createElementNS(SVG_NS, "circle");
+    circle.setAttribute("r", outerRadius);
+    circle.setAttribute("fill", "none");
+    circle.setAttribute("stroke", "black");
+    svg.appendChild(circle);
+
+    NOTES.forEach((note, i) => {
+      // 0 degrees points straight up; notes go clockwise in 30-degree steps.
+      const angle = (i * 30 - 90) * Math.PI / 180;
+
+      const tick = document.createElementNS(SVG_NS, "line");
+      tick.setAttribute("x1", Math.cos(angle) * (outerRadius - 10));
+      tick.setAttribute("y1", Math.sin(angle) * (outerRadius - 10));
+      tick.setAttribute("x2", Math.cos(angle) * outerRadius);
+      tick.setAttribute("y2", Math.sin(angle) * outerRadius);
+      tick.setAttribute("stroke", "black");
+      svg.appendChild(tick);
+
+      const label = document.createElementNS(SVG_NS, "text");
+      label.setAttribute("x", Math.cos(angle) * labelRadius);
+      label.setAttribute("y", Math.sin(angle) * labelRadius);
+      label.setAttribute("text-anchor", "middle");
+      label.setAttribute("dominant-baseline", "central");
+      label.setAttribute("font-size", "16");
+      label.textContent = note;
+      svg.appendChild(label);
+    });
+  </script>
+</body>
+</html>

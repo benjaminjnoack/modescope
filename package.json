@@ -1,0 +1,9 @@
+{
+  "name": "mode-wheel",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A wheel of the twelve semitones.",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
