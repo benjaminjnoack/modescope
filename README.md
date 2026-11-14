@@ -1,6 +1,6 @@
 # Modescope
 
-An interactive wheel for exploring the seven modes of the major scale and the chords in them.
+An interactive wheel for exploring the seven modes of the diatonic scale (Ionian through Locrian) and the chords in them.
 
 Spin the wheel to change the key or mode, select a note to see which chords on it are in each parallel mode, and click a chord to spell it out with its scale degrees. Hover over terms to see what they mean.
 
