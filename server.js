@@ -6,8 +6,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const PORT = process.env.PORT || 3000;
-const ROOT = __dirname;
-const IGNORED = ["node_modules", ".git"];
+// Everything the browser loads lives in public/.
+const ROOT = path.join(__dirname, "public");
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -44,7 +44,7 @@ const server = http.createServer((req, res) => {
   }
 
   let filePath = path.join(ROOT, urlPath);
-  if (!filePath.startsWith(ROOT)) {
+  if (filePath !== ROOT && !filePath.startsWith(ROOT + path.sep)) {
     res.writeHead(403).end("Forbidden");
     return;
   }
@@ -70,10 +70,9 @@ const server = http.createServer((req, res) => {
   });
 });
 
-// Watch the project and tell connected pages to reload (debounced).
+// Watch public/ and tell connected pages to reload (debounced).
 let timer = null;
 fs.watch(ROOT, { recursive: true }, (_event, filename) => {
-  if (!filename || IGNORED.some((dir) => filename.split(path.sep).includes(dir))) return;
   clearTimeout(timer);
   timer = setTimeout(() => {
     console.log(`Changed: ${filename} — reloading ${clients.size} page(s)`);

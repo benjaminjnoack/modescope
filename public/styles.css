@@ -1,0 +1,45 @@
+body {
+  font-family: sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 2rem 1rem;
+}
+
+#wheel {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  touch-action: none; /* Let the page handle touch drags instead of scrolling. */
+  user-select: none;
+}
+
+#wheel text {
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+/* Rings */
+.ring { cursor: grab; }
+.ring.dragging { cursor: grabbing; }
+
+.segment {
+  fill: white;
+  stroke: black;
+}
+.segment.in-mode { fill: lightyellow; }
+.segment.selected { fill: gold; }
+
+#note-ring text { font-size: 16px; }
+#mode-ring text { font-size: 12px; }
+
+/* Labels */
+.numeral {
+  font-size: 16px;
+  font-weight: bold;
+}
+.key-name {
+  font-size: 26px;
+  font-weight: bold;
+}
+.mode-name { font-size: 14px; }
