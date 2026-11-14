@@ -15,8 +15,13 @@ body {
   width: 100%;
 }
 
-#wheel {
+.wheel-column {
   flex: 0 1 400px;
+  min-width: 0;
+}
+
+#wheel {
+  display: block;
   width: 100%;
   max-width: 400px;
   height: auto;
@@ -105,8 +110,45 @@ body {
   flex-wrap: wrap;
   gap: 0.3rem;
 }
-.chords li {
+.chords button {
+  font: inherit;
   border: 1px solid black;
   background: white;
   padding: 0.1rem 0.4rem;
+  cursor: pointer;
+}
+.chords button.spelled {
+  background: black;
+  color: white;
+}
+
+/* Spelled chord, under the wheel */
+.spelled-chord { text-align: center; }
+.spelled-chord h2 {
+  margin: 0.5rem 0;
+  font-size: 1.2rem;
+}
+.spelled-chord-notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.spelled-chord-notes li {
+  display: flex;
+  flex-direction: column;
+  min-width: 2.5rem;
+  border: 1px solid black;
+  padding: 0.3rem 0.5rem;
+}
+.spelled-note {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+.spelled-degree {
+  font-size: 0.8rem;
+  color: dimgray;
 }

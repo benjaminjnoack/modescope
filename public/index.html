@@ -10,6 +10,7 @@
 <body>
   <h1>Mode Wheel</h1>
   <main class="layout">
+  <div class="wheel-column">
   <svg id="wheel" viewBox="-220 -220 440 440">
     <g id="note-ring" class="ring"></g>
     <path id="selected-marker" class="selected-marker"></path>
@@ -18,6 +19,12 @@
     <text id="key-name" class="key-name" x="0" y="-6"></text>
     <text id="mode-name" class="mode-name" x="0" y="20"></text>
   </svg>
+
+  <section class="spelled-chord">
+    <h2 id="spelled-chord-name"></h2>
+    <ol id="spelled-chord-notes" class="spelled-chord-notes"></ol>
+  </section>
+  </div>
 
   <aside id="chord-panel" class="chord-panel">
     <h2 id="chord-panel-title"></h2>

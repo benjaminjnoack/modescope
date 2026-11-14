@@ -13,10 +13,12 @@ export const MODE_STEP = 360 / MODES.length;
 let parentRotation = 0;
 let modeRotation = 0;
 let noteRingLocked = false;
-// The selected note (an index into NOTES) and which of its spellings to use
-// (e.g. 0 = "C♯", 1 = "D♭"). There is always exactly one selected note.
-// It starts as the top note and moves with the ring as it turns.
-let selection = { note: 0, spelling: 0 };
+// The selected note (an index into NOTES), which of its spellings to use
+// (e.g. 0 = "C♯", 1 = "D♭"), and the chord on it to spell out (a chord
+// suffix such as "m7", or null for the panel's first chord). There is
+// always exactly one selected note. It starts as the top note and moves
+// with the ring as it turns.
+let selection = { note: 0, spelling: 0, chord: null };
 
 // Which item of a ring sits at the top, given its rotation.
 function topIndex(rotation, step, count) {
@@ -62,10 +64,18 @@ export function selectedNote() {
 export function clickNote(note) {
   if (note === selection.note) {
     const count = spellings(note).length;
-    selection = { note, spelling: (selection.spelling + 1) % count };
+    selection = { ...selection, spelling: (selection.spelling + 1) % count };
   } else {
-    selection = { note, spelling: 0 };
+    selection = { note, spelling: 0, chord: null };
   }
+}
+
+export function selectedChord() {
+  return selection.chord;
+}
+
+export function selectChord(suffix) {
+  selection = { ...selection, chord: suffix };
 }
 
 // The name of a note: the chosen spelling for the selected note, and every

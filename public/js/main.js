@@ -1,6 +1,6 @@
 // Builds the wheel and keeps it in sync with the state.
 
-import { NOTES, MODES, chordsOn } from "./music.js";
+import { NOTES, MODES, chordsOn, chordType, spellChord } from "./music.js";
 import * as state from "./state.js";
 import { createRing } from "./ring.js";
 import { makeDraggable } from "./drag.js";
@@ -20,6 +20,8 @@ const modeName = document.getElementById("mode-name");
 const selectedMarker = document.getElementById("selected-marker");
 const chordPanelTitle = document.getElementById("chord-panel-title");
 const chordList = document.getElementById("chord-list");
+const spelledName = document.getElementById("spelled-chord-name");
+const spelledNotes = document.getElementById("spelled-chord-notes");
 
 const noteRing = createRing(noteGroup, NOTES, NOTE_RING);
 const modeRing = createRing(modeGroup, MODES.map((mode) => mode.name), MODE_RING);
@@ -70,9 +72,21 @@ function renderSelectedNote() {
   const rootName = state.noteName(note);
   const tonicName = state.noteName(tonic);
   chordPanelTitle.textContent = `Chords on ${rootName}`;
-  chordList.replaceChildren(...MODES.map((_, offset) => {
+
+  // Panel rows: the current mode first, then the rest in order.
+  const rows = MODES.map((_, offset) => {
     const mode = MODES[(start + offset) % MODES.length];
-    const result = chordsOn(mode, tonic, note);
+    return { mode, offset, result: chordsOn(mode, tonic, note) };
+  });
+
+  // The chord to spell: the one clicked, or the panel's first chord if
+  // nothing was clicked or the clicked chord is no longer listed.
+  const listed = rows.flatMap(({ result }) => (result ? result.chords : []));
+  if (!listed.includes(state.selectedChord())) state.selectChord(listed[0]);
+  const chord = state.selectedChord();
+  renderSpelledChord(rootName, chord);
+
+  chordList.replaceChildren(...rows.map(({ mode, offset, result }) => {
     const item = document.createElement("li");
     item.classList.toggle("current", offset === 0);
     item.classList.toggle("absent", result === null);
@@ -92,12 +106,36 @@ function renderSelectedNote() {
       const chords = document.createElement("ul");
       chords.className = "chords";
       chords.append(...result.chords.map((suffix) => {
-        const chord = document.createElement("li");
-        chord.textContent = rootName + suffix;
-        return chord;
+        const item = document.createElement("li");
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = rootName + suffix;
+        button.classList.toggle("spelled", suffix === chord);
+        button.addEventListener("click", () => {
+          state.selectChord(suffix);
+          render();
+        });
+        item.append(button);
+        return item;
       }));
       item.append(chords);
     }
+    return item;
+  }));
+}
+
+// Spell out a chord's notes under the wheel, with each note's degree.
+function renderSpelledChord(rootName, suffix) {
+  spelledName.textContent = rootName + suffix;
+  spelledNotes.replaceChildren(...spellChord(rootName, chordType(suffix)).map(({ name, degree }) => {
+    const item = document.createElement("li");
+    const noteLabel = document.createElement("span");
+    noteLabel.className = "spelled-note";
+    noteLabel.textContent = name;
+    const degreeLabel = document.createElement("span");
+    degreeLabel.className = "spelled-degree";
+    degreeLabel.textContent = degree;
+    item.append(noteLabel, degreeLabel);
     return item;
   }));
 }

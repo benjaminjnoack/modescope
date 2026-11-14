@@ -14,26 +14,64 @@ export const MODES = [
   { name: "Locrian",    intervals: [0, 1, 3, 5, 6, 8, 10], numerals: ["i°", "♭II", "♭iii", "iv", "♭V", "♭VI", "♭vii"] },
 ];
 
-// Chord types, as semitones above the root (wrapped into one octave, so a
-// 9th is 2, an 11th is 5 and a 13th is 9). A chord is available in a mode
-// when every one of its notes is in the mode. 13th chords leave out the
-// 11th, as is usual in practice.
+// Chord types. Each tone is [degree, semitones above the root]; the degree
+// (1, 3, 5, 7, 9, 11, 13, or 4 for sus4) decides which letter spells it.
+// A chord is available in a mode when every one of its notes is in the mode.
+// 13th chords leave out the 11th, as is usual in practice.
 export const CHORD_TYPES = [
-  { suffix: "",      notes: [0, 4, 7] },
-  { suffix: "m",     notes: [0, 3, 7] },
-  { suffix: "°",     notes: [0, 3, 6] },
-  { suffix: "sus4",  notes: [0, 5, 7] },
-  { suffix: "7",     notes: [0, 4, 7, 10] },
-  { suffix: "maj7",  notes: [0, 4, 7, 11] },
-  { suffix: "m7",    notes: [0, 3, 7, 10] },
-  { suffix: "m7♭5",  notes: [0, 3, 6, 10] },
-  { suffix: "9",     notes: [0, 4, 7, 10, 2] },
-  { suffix: "maj9",  notes: [0, 4, 7, 11, 2] },
-  { suffix: "m9",    notes: [0, 3, 7, 10, 2] },
-  { suffix: "m11",   notes: [0, 3, 7, 10, 2, 5] },
-  { suffix: "13",    notes: [0, 4, 7, 10, 2, 9] },
-  { suffix: "maj13", notes: [0, 4, 7, 11, 2, 9] },
+  { suffix: "",      tones: [[1, 0], [3, 4], [5, 7]] },
+  { suffix: "m",     tones: [[1, 0], [3, 3], [5, 7]] },
+  { suffix: "°",     tones: [[1, 0], [3, 3], [5, 6]] },
+  { suffix: "sus4",  tones: [[1, 0], [4, 5], [5, 7]] },
+  { suffix: "7",     tones: [[1, 0], [3, 4], [5, 7], [7, 10]] },
+  { suffix: "maj7",  tones: [[1, 0], [3, 4], [5, 7], [7, 11]] },
+  { suffix: "m7",    tones: [[1, 0], [3, 3], [5, 7], [7, 10]] },
+  { suffix: "m7♭5",  tones: [[1, 0], [3, 3], [5, 6], [7, 10]] },
+  { suffix: "9",     tones: [[1, 0], [3, 4], [5, 7], [7, 10], [9, 14]] },
+  { suffix: "maj9",  tones: [[1, 0], [3, 4], [5, 7], [7, 11], [9, 14]] },
+  { suffix: "m9",    tones: [[1, 0], [3, 3], [5, 7], [7, 10], [9, 14]] },
+  { suffix: "m11",   tones: [[1, 0], [3, 3], [5, 7], [7, 10], [9, 14], [11, 17]] },
+  { suffix: "13",    tones: [[1, 0], [3, 4], [5, 7], [7, 10], [9, 14], [13, 21]] },
+  { suffix: "maj13", tones: [[1, 0], [3, 4], [5, 7], [7, 11], [9, 14], [13, 21]] },
 ];
+
+export function chordType(suffix) {
+  return CHORD_TYPES.find((type) => type.suffix === suffix);
+}
+
+const LETTERS = "CDEFGAB";
+const LETTER_SEMITONES = [0, 2, 4, 5, 7, 9, 11];
+// Semitones above the root for each degree in a major scale.
+const MAJOR_DEGREES = { 1: 0, 3: 4, 4: 5, 5: 7, 7: 11, 9: 14, 11: 17, 13: 21 };
+
+// "♭" for -1, "♯♯" for 2, and so on.
+function accidental(offset) {
+  return offset < 0 ? "♭".repeat(-offset) : "♯".repeat(offset);
+}
+
+// Distance in semitones wrapped into -6..5.
+function wrapOffset(semitones) {
+  return ((semitones % 12) + 18) % 12 - 6;
+}
+
+// Spell a chord from its root's name (e.g. "D♭") and its type. Each degree
+// gets its own letter (a 3rd is two letters above the root), so D♭m is
+// D♭ F♭ A♭, not D♭ E A♭. Returns [{ name, degree }], e.g. degree "♭3".
+export function spellChord(rootName, type) {
+  const rootLetter = LETTERS.indexOf(rootName[0]);
+  const rootOffset = [...rootName.slice(1)].reduce((sum, c) => sum + (c === "♯" ? 1 : -1), 0);
+  const rootSemitones = LETTER_SEMITONES[rootLetter] + rootOffset;
+
+  return type.tones.map(([degree, semitones]) => {
+    const letter = (rootLetter + degree - 1) % LETTERS.length;
+    const offset = wrapOffset(rootSemitones + semitones - LETTER_SEMITONES[letter]);
+    return {
+      name: LETTERS[letter] + accidental(offset),
+      degree: accidental(semitones - MAJOR_DEGREES[degree]) + degree,
+    };
+  });
+}
+
 
 // The ways to spell a note, e.g. ["C♯", "D♭"] or just ["D"].
 export function spellings(note) {
@@ -52,7 +90,7 @@ export function chordsOn(mode, tonic, root) {
   return {
     numeral: mode.numerals[degree],
     chords: CHORD_TYPES
-      .filter((type) => type.notes.every(inMode))
+      .filter((type) => type.tones.every(([, semitones]) => inMode(semitones)))
       .map((type) => type.suffix),
   };
 }
