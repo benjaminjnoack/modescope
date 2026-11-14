@@ -6,7 +6,17 @@ body {
   margin: 2rem 1rem;
 }
 
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 2rem;
+  width: 100%;
+}
+
 #wheel {
+  flex: 0 1 400px;
   width: 100%;
   max-width: 400px;
   height: auto;
@@ -37,6 +47,14 @@ body {
 .segment.in-mode { fill: lightyellow; }
 .segment.selected { fill: gold; }
 
+/* Outline around the selected segment, drawn on top of the ring. */
+.selected-marker {
+  fill: none;
+  stroke: royalblue;
+  stroke-width: 4;
+  pointer-events: none;
+}
+
 #note-ring text { font-size: 16px; }
 #mode-ring text { font-size: 12px; }
 
@@ -50,3 +68,32 @@ body {
   font-weight: bold;
 }
 .mode-name { font-size: 14px; }
+
+/* Chord panel */
+.chord-panel {
+  flex: 0 1 16rem;
+  min-width: 0;
+}
+.chord-panel h2 {
+  margin-top: 0;
+  font-size: 1.2rem;
+}
+.chord-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid black;
+}
+.chord-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0.75rem;
+}
+.chord-list li + li { border-top: 1px solid black; }
+.chord-list li.current {
+  background: gold;
+  font-weight: bold;
+}
+.chord-list li.absent { color: gray; }
+.chord-name { white-space: pre; }

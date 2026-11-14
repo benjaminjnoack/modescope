@@ -9,12 +9,20 @@
 </head>
 <body>
   <h1>Mode Wheel</h1>
+  <main class="layout">
   <svg id="wheel" viewBox="-220 -220 440 440">
     <g id="note-ring" class="ring"></g>
+    <path id="selected-marker" class="selected-marker"></path>
     <g id="mode-ring" class="ring"></g>
     <g id="numerals"></g>
     <text id="key-name" class="key-name" x="0" y="-6"></text>
     <text id="mode-name" class="mode-name" x="0" y="20"></text>
   </svg>
+
+  <aside id="chord-panel" class="chord-panel">
+    <h2 id="chord-panel-title"></h2>
+    <ol id="chord-list" class="chord-list"></ol>
+  </aside>
+  </main>
 </body>
 </html>
