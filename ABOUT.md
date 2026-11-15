@@ -6,7 +6,7 @@ This is why I built Modescope and what I want it to do. The [guide](GUIDE.md) ex
 
 ### The modes are one ring
 
-It started while I was reading *The Ultimate Scale Book* by Troy Stetina. Appendix A lists every mode with its tones and its structure, meaning its pattern of whole and half steps. I noticed that Dorian has the same structure as Ionian if you picture the pattern as a ring and shift it one place to the left. Every mode works the same way. They aren't seven separate scales but one pattern of steps, started from a different place.
+It started while I was reading [The Ultimate Scale Book](https://www.amazon.com/dp/0793597889) by Troy Stetina. Appendix A lists every mode with its tones and its structure, meaning its pattern of whole and half steps. I noticed that Dorian has the same structure as Ionian if you picture the pattern as a ring and shift it one place to the left. Every mode works the same way. They aren't seven separate scales but one pattern of steps, started from a different place.
 
 ### Borrowed chords
 
