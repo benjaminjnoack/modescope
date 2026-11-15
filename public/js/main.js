@@ -345,7 +345,7 @@ function renderGuitar(chordName, voicings) {
   const count = voicings.length;
   guitarName.textContent = "On guitar";
   guitarName.title = tips.guitarTip(chordName);
-  if (count > 1) {
+  if (count > 0) {
     const counter = document.createElement("span");
     counter.className = "voicing-count";
     counter.textContent = ` · ${index + 1} of ${count}`;
