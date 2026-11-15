@@ -549,7 +549,7 @@ button[title] { cursor: pointer; }
 .chosen-chord {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   gap: 24px;
 }
 .chosen-summary {
@@ -583,26 +583,33 @@ button[title] { cursor: pointer; }
   font-weight: 500;
   color: var(--muted);
 }
+/* Same-size tiles, four to a row. Room for two rows is always kept (a
+   chord has at most six notes), so a 13th chord spilling onto a
+   second row doesn't make the card taller. */
 .spelled-chord-notes {
+  --tile-size: 58px;
+
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, var(--tile-size));
+  grid-auto-rows: var(--tile-size);
+  align-content: start;
   gap: 8px;
+  min-height: calc(2 * var(--tile-size) + 8px);
 }
 .spelled-chord-notes li {
-  flex: 1 0 3rem;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2px;
-  padding: 10px 6px;
   border-radius: 12px;
   background: var(--tile);
 }
 .spelled-note {
-  font-size: 1.375rem;
+  font-size: 1.25rem;
   font-weight: 700;
 }
 .spelled-degree {
@@ -610,14 +617,24 @@ button[title] { cursor: pointer; }
   color: var(--muted);
 }
 
+/* "On guitar" with its arrows, above the neck. */
+.guitar-column {
+  flex: 999 1 560px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 /* Arrows either side of "On guitar", to step through voicings. */
 .guitar-heading {
   display: flex;
+  justify-content: center;
   align-items: center;
   gap: 8px;
 }
 .guitar-name {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   text-align: center;
   font-size: 0.875rem;
   color: var(--muted);
@@ -630,8 +647,7 @@ button[title] { cursor: pointer; }
 
 /* Guitar neck: nut on the left, high e on top. */
 #guitar {
-  flex: 999 1 560px;
-  min-width: 0;
+  width: 100%;
   display: block;
   height: auto;
 }

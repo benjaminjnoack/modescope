@@ -72,7 +72,7 @@ Beside the chosen chord's notes, it's shown on a guitar neck in standard tuning 
 
 When a chord has no hand-picked voicing, the fingering is worked out by the app: it's the easiest one it finds with the chord's root as the lowest note, no more than four fingers and a reach of four frets. Like most guitarists, it may leave out the 5th of a chord with four or more notes, and the 9th of an 11th or 13th chord (so a 13th chord can be just 1 3 ♭7 13).
 
-Many chords also have hand-picked voicings, such as barre chords further up the neck. When a chord has more than one, "On guitar" shows how many ("1 of 3") and the ‹ › arrows on either side step through them, in this order: voicings chosen for this site (like Gm as a barre at the 3rd fret), then other common shapes, with the familiar open chord first where there is one, then the one the app works out. Picking another chord starts again from the first.
+Many chords also have hand-picked voicings, such as barre chords further up the neck. When a chord has more than one, "On guitar" above the neck shows how many ("1 of 3") and the ‹ › arrows on either side step through them, in this order: voicings chosen for this site (like Gm as a barre at the 3rd fret), then other common shapes, with the familiar open chord first where there is one, then the one the app works out. Picking another chord starts again from the first.
 
 ## Tooltips
 
