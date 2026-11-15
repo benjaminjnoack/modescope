@@ -187,6 +187,18 @@ export function setGuitarVoicingIndex(chord, index) {
   guitarVoicing = { chord, index };
 }
 
+// The explanation shown at the bottom of a touch screen, which doesn't show
+// tooltips: the tapped term's tooltip text, or null when there's none open.
+let explanationText = null;
+
+export function explanation() {
+  return explanationText;
+}
+
+export function setExplanation(text) {
+  explanationText = text;
+}
+
 // Save and restore the selection (used to undo the clicks of a double-click).
 export function getSelection() {
   return selection;

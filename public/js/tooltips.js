@@ -139,12 +139,12 @@ export function barreTip(fret, strings) {
     `pressing them all at once.`;
 }
 
-// The heading over the guitar.
-export function guitarTip(chordName) {
+// The heading over the guitar. `vertical` is the neck standing up, nut on top.
+export function guitarTip(chordName, vertical = false) {
   return `One way to play ${chordName} on a guitar in standard tuning (E A D G B E), ` +
     `with its root as the lowest note. Dots are fingers, a bar is one finger across several ` +
-    `strings, O is an open string and X a string you don't play. The letters left of the ` +
-    `nut are the notes each string sounds.`;
+    `strings, O is an open string and X a string you don't play. The letters ` +
+    `${vertical ? "above" : "left of"} the nut are the notes each string sounds.`;
 }
 
 // The arrows beside the guitar heading.

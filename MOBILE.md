@@ -13,30 +13,47 @@ Each stage ends with something usable. A later stage is only worth starting if t
 
 ## Stage 1: Mobile-friendly layout
 
+**Status:** done. Phones get their own layout instead of the desktop one squeezed down, and touch screens get a way to read the explanations that tooltips give on desktop.
+
 **Goal:** every feature is reachable and readable on an iPhone held upright, on the live site.
 
-### Where things stand today
+### What was done
 
-- `index.html` already has a viewport meta tag, and dragging the rings already works on touch: `drag.js` uses pointer events and the rings have `touch-action: none`.
-- `styles.css` has no width breakpoints. The layout is flex-wrap with a 1220px maximum; the wheel is capped at 440px; the chord table has 15 columns; the guitar neck is a 900 × 200 SVG.
-- Every explanation is a native `title` tooltip (or `<title>` inside the SVG). **iOS never shows these**, so on a phone the app loses goal 3 in [ABOUT.md](ABOUT.md), explaining the theory along the way.
-- Double-clicking the note ring toggles the lock. On iOS a double tap competes with Safari's double-tap zoom, so on touch the Relative/Parallel switch in the toolbar is the reliable way.
+- **A phone layout** (`styles.css`, below 600px wide, so any phone in portrait). The toolbar's readouts (tonic, mode, key signature) and the Relative/Parallel switch stay pinned at the top of the screen, while the title, the Guide/About links and the theme button scroll away above them. The panels stack in one column that scrolls: the wheel, the chord table, then the chosen chord and the guitar. For this the header in `index.html` is split into two groups (`.toolbar-brand` and `.toolbar-controls`); on desktop they still show as one row, as before.
+- **Sized for fingers.** The key signatures are in two rows (7♭ to 0, then 1♯ to 7♯). On any touch screen, chord buttons, the switch and key signatures are at least 44px tall. The wheel's labels are a little bigger, since the wheel is drawn smaller.
+- **Chord table.** It still scrolls sideways, and at every width the mode-name column stays in place, so you always know which row you're on.
+- **An upright guitar neck.** In portrait, `fretboard.js` turns the neck a quarter turn into a chord chart: the nut at the top, low E on the left, string notes and O/X above the nut. It also uses shorter frets, so the neck is about 600px tall instead of three screens. `main.js` uses the same 600px query and redraws when the phone turns; in landscape the neck lies down again.
+- **iPhone details.** `viewport-fit=cover`, with the page padded by `env(safe-area-inset-*)` to keep it clear of the Dynamic Island and the home bar. Buttons and links use `touch-action: manipulation`, so taps don't wait for a possible double tap. Nothing relies on hover.
+- **Tap to explain** (`explain.js`). On a touch screen, tapping a term (a numeral, a readout, a mode name, a degree number, a guitar dot, an underlined word) shows its explanation in a panel at the bottom. Holding a button for half a second (a chord, a key signature, the switch, the voicing arrows) does the same without pressing it. The text is read from the `title` attributes already on the page, so the wording stays in `tooltips.js`, and the mouse still gets ordinary tooltips. The open explanation is kept in `state.js` and drawn by `render()`.
+- **Toggling the lock.** A double tap isn't reliable on iOS, so on a phone the toolbar switch is how you lock the note ring. `GUIDE.md` says so, and has a new "On a phone" section.
+- **An error box for testing.** `server.js` also injects a script that shows JavaScript errors in a red box at the top of the page; tap the box to dismiss it. Only the dev server adds it, so the deployed site doesn't have it.
 
-### Stage 1 steps
+### Checking in Firefox (responsive design mode)
 
-1. **Narrow-screen layout.** Add a breakpoint around 600px wide in `styles.css` that stacks the wheel, the chord panel and the chosen chord in one column. The wheel fills the width. The toolbar wraps: the readouts on one row, the Relative/Parallel switch full width, the Guide/About links and theme button compact. The chord table stays horizontally scrollable, with the mode name column sticky so you always know which row you're on. The guitar neck scales to the width. Tap targets are at least 44px.
-2. **iPhone details.** Add `viewport-fit=cover` to the viewport meta and pad the page with `env(safe-area-inset-*)` so nothing sits under the notch or home bar. Put `touch-action: manipulation` on buttons so taps don't wait for a possible double tap. Make sure nothing relies on hover alone.
-3. **Tap to explain.** Give touch screens a way to read the tooltips: for example, tapping an "info" button (or long-pressing a term) opens a small popover or bottom sheet with the same text from `tooltips.js`. Keep it in state and draw it in `render()`, like everything else. Keep the `title` attributes for desktop.
-4. **Update GUIDE.md** with how things work on touch (tap to explain, using the toolbar switch for the lock).
+1. Run `npm start` and open <http://localhost:3000> in Firefox.
+2. Open responsive design mode with **Ctrl+Shift+M** (or Tools → Browser Tools → Responsive Design Mode).
+3. Add an iPhone 17 if it isn't in the device list: open the device menu at the top, choose **Edit List…** → **Add Custom Device**, and enter 402 × 874, device pixel ratio 3, an iPhone Safari user agent, and **Touch Screen** checked. Then pick it from the menu.
+4. Check portrait: the bar stays pinned while you scroll, the panels stack, the chord table scrolls sideways with the mode names fixed, and the neck stands upright. Use the rotate button in the toolbar to check landscape (874 wide), where the neck lies down and the layout goes back to the desktop one.
+5. Turn on touch simulation (the hand icon) to try dragging the rings and tapping. Firefox's simulated touch isn't quite a real finger, so if tapping a term or holding a button doesn't open an explanation here, check on the phone before treating it as a bug.
+6. Close responsive design mode and check the desktop layout still looks as it did.
 
-### Testing without a Mac
+### Checking on the iPhone
 
-- Layout: the device toolbar in Chrome or Firefox developer tools, at iPhone sizes.
-- A real iPhone: `npm start` already listens on every network interface, so on the same Wi-Fi open `http://<your-linux-ip>:3000` in Safari. Live reload works there too.
-- Errors: Safari's Web Inspector needs a Mac. Instead, have `server.js` inject a small on-page error overlay in development (it already injects the live-reload snippet), so JavaScript errors show up on the phone's screen. Nothing changes in the deployed app.
-- Finally, check the live GitHub Pages site on the phone after pushing.
+1. Put the phone and the Linux machine on the same Wi-Fi. Find the machine's address with `hostname -I` (the first address, e.g. `192.168.1.20`).
+2. Run `npm start`. It listens on every network interface. If the phone can't connect, the firewall is probably blocking the port: `sudo ufw allow 3000/tcp`.
+3. In Safari on the iPhone, open `http://<that address>:3000`. Safari says the page isn't secure because it's plain HTTP; that's fine for testing. Live reload works here too, so saving a file on Linux reloads the phone.
+4. There's no Web Inspector without a Mac. Instead, JavaScript errors show in the red box at the top of the page.
+5. Work through the list below in portrait, then turn the phone to check landscape (the neck lies down, and nothing sits under the Dynamic Island).
+6. After pushing to `master`, do the same on the live site: <https://benjaminjnoack.github.io/modescope/>. (Safari may cache it; pull to reload.)
 
-**Done when:** you can turn both rings, switch Relative/Parallel, pick a key signature, read the chord table, pick a chord, see it on the guitar and read every explanation, all on an iPhone in portrait.
+**Done when** all of these work on the iPhone in portrait:
+
+- Drag both rings. Tap a note to select it, and tap a mode to turn it to the top.
+- Switch between Relative and Parallel with the switch in the pinned bar.
+- Pick a key signature. In Parallel, hold a grayed-out one and read why it's grayed out. (If Safari ignores touches on disabled buttons, change them to `aria-disabled` plus a check in the click handler.)
+- Scroll the chord table sideways with the mode names staying put, and pick a chord.
+- Read the chosen chord, step through its voicings with ‹ ›, and read the upright neck.
+- Read explanations: tap a Roman numeral, a readout, a degree number and a guitar dot; hold a chord button and check that letting go doesn't also pick the chord; close the panel with ×.
 
 ## Stage 2: Installable web app (PWA)
 

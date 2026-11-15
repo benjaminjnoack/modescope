@@ -17,7 +17,7 @@ The bar at the top shows the current tonic, mode and key signature. It also has:
 - **Inner ring (modes):** drag to change the mode, or click a mode to turn it to the top. Each mode has its own color, which it keeps in the chord table. The current mode's color is stronger.
   - **Relative · keep notes (default):** the notes stay the same and the tonic moves. C Ionian becomes D Dorian, then E Phrygian, and so on.
   - **Parallel · keep tonic:** the tonic stays the same and the notes change. C Ionian becomes C Dorian, then C Phrygian, and so on. The outer ring is locked: it has a thick gray outline and can't be dragged.
-- **Switch between them** with the switch in the toolbar, or by double-clicking the outer ring.
+- **Switch between them** with the switch in the toolbar, or by double-clicking the outer ring. On a phone, use the switch: a double tap isn't reliable there.
 - **Roman numerals** around the outside show the chord built on each degree of the mode. Uppercase numerals are major chords, lowercase are minor, and ° marks diminished.
 
 ## Key signature
@@ -77,3 +77,17 @@ Many chords also have hand-picked voicings, such as barre chords further up the 
 ## Tooltips
 
 Hover over the toolbar, the Roman numerals, the mode names and numerals in the chord table, the chord buttons, the chosen chord's name and degree numbers, or the guitar's strings, dots and "On guitar" for an explanation of each term.
+
+On a phone or tablet, which can't hover:
+
+- **Tap a term** (a Roman numeral, a readout in the toolbar, a mode name, a degree number, a dot on the guitar, any underlined word) to read its explanation in a panel at the bottom of the screen.
+- **Touch and hold a button** (a chord, a key signature, the Relative/Parallel switch, the voicing arrows) for half a second to read its explanation without pressing it.
+- Close the panel with its × button, or tap somewhere without an explanation. Tapping another term replaces it.
+
+## On a phone
+
+Held upright, the page is one column that you scroll: the wheel, then the chord table, then the chosen chord and the guitar. The tonic, mode, key signature and the Relative/Parallel switch stay pinned at the top of the screen while you scroll, so you can always see where you are and switch modes.
+
+- The key signatures are in two rows: 7♭ to 0, then 1♯ to 7♯.
+- The chord table scrolls sideways. The mode names stay in place so you know which row you're on.
+- The guitar neck stands upright like a chord chart: the nut is at the top, the low E string on the left and the high e on the right, with each string's note and O or X above the nut. Turn the phone sideways to see it lying down.

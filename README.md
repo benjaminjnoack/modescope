@@ -2,7 +2,7 @@
 
 An interactive wheel for exploring the seven modes of the diatonic scale (Ionian through Locrian) and the chords in them.
 
-Spin the wheel to change the key or mode, select a note to see which chords on it are in each parallel mode, and click a chord to spell it out with its scale degrees and see it on a guitar neck. Hover over terms to see what they mean.
+Spin the wheel to change the key or mode, select a note to see which chords on it are in each parallel mode, and click a chord to spell it out with its scale degrees and see it on a guitar neck. Hover over terms (or tap them on a phone) to see what they mean.
 
 **Live site:** <https://benjaminjnoack.github.io/modescope/>
 
@@ -17,6 +17,8 @@ npm start
 Then open <http://localhost:3000>. To use a different port, run `PORT=8080 npm start`.
 
 The page reloads itself whenever a file in `public/` changes. Changes to `server.js` need a server restart.
+
+To try it on a phone, open `http://<this machine's IP>:3000` on the same Wi-Fi. Phones have no developer tools, so during development JavaScript errors are also shown in a red box at the top of the page (tap it to dismiss). This is only added by `server.js`, so the deployed site doesn't have it.
 
 ### Linting
 
@@ -69,6 +71,7 @@ Every push to `master` publishes `public/` to GitHub Pages, using the workflow i
         ├── fretboard.js Draws the guitar neck
         ├── state.js     Key, mode, lock and selection state
         ├── theme.js     Light and dark theme switch
+        ├── explain.js   Explanations on touch screens, which don't show tooltips
         ├── svg.js       SVG geometry and element helpers
         ├── ring.js      A reusable ring of labeled segments
         ├── drag.js      Drag-to-rotate with snapping and click detection
@@ -81,7 +84,7 @@ Every push to `master` publishes `public/` to GitHub Pages, using the workflow i
 - **Change a mode's Roman numerals or description:** edit `MODES` in `music.js`.
 - **Change colors or fonts:** edit the custom properties at the top of `styles.css`. Each color is defined once for the light theme and again for the dark theme (in two places that must match: the `prefers-color-scheme` block and `[data-theme="dark"]`). The modes' colors are `--mode-0` (Ionian) to `--mode-6` (Locrian).
 - **Add a guitar voicing:** add it to `PREFERRED` in `alternates.js` (it's then shown first), e.g. `"A9": ["x02423"]` (frets from low E to high e, `x` for muted). Check it with `node -e 'import("./public/js/guitar.js").then((g) => console.log(g.checkAlternates()))'`, which should print `[]`.
-- **Change tooltip wording:** edit `tooltips.js`.
+- **Change tooltip wording:** edit `tooltips.js`. Touch screens show the same text.
 
 ## License
 
