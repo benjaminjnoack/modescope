@@ -261,3 +261,13 @@ body {
   font-weight: normal;
   color: dimgray;
 }
+
+/* Links to the README and ABOUT at the bottom of the page. */
+.page-footer {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 2rem;
+  font-size: 0.9rem;
+}
+.page-footer a { color: dimgray; }

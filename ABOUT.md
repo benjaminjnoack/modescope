@@ -1,6 +1,6 @@
 # About Modescope
 
-This is why I built Modescope and what I want it to do. The [README](README.md) explains how to use it.
+This is why I built Modescope and what I want it to do. The [guide](GUIDE.md) explains how to use it.
 
 ## How it started
 

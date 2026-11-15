@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Modescope is a single-page, dependency-free web app: an SVG wheel for exploring the seven diatonic modes and the chords in them. `README.md` describes the user-facing behavior in detail; read it before changing behavior, and keep it in sync when you do.
+Modescope is a single-page, dependency-free web app: an SVG wheel for exploring the seven diatonic modes and the chords in them. `GUIDE.md` describes the user-facing behavior in detail, for players (no code names or file paths); read it before changing behavior, and keep it in sync when you do. `README.md` is for developers: running, deployment, project structure, extending. The page's footer links to `GUIDE.md` and `ABOUT.md` on GitHub.
 
 `ABOUT.md` explains why the project exists and what it's for: showing the modes as one rotating ring, and making modal interchange (borrowed chords) visible. Use its goals to judge whether a change fits. Prefer changes that make those ideas clearer over adding features.
 
