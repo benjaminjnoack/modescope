@@ -42,7 +42,11 @@ When the guitar shows a chord, its voicings come in this order: `PREFERRED` in `
 
 ## Deployment
 
-Every push to `master` publishes `public/` to GitHub Pages, using the workflow in `.github/workflows/pages.yml`. `server.js` is only used for local development.
+Every push to `master` publishes `public/` to GitHub Pages, using the workflow in `.github/workflows/pages.yml`. Before publishing, it stamps `public/sw.js` with the commit, so phones that installed the app pick up the new version.
+
+The site can be added to a phone's home screen and works offline: `manifest.webmanifest` describes the app and `sw.js` keeps a copy of every file. A new file in `public/` must be added to `FILES` in `sw.js`; `npm run lint` fails until it is. The service worker only registers over HTTPS, so it never gets in the way of live reload; to try it locally, open <http://localhost:3000/?sw>.
+
+The icons are drawn in `public/icons/icon.svg`. After changing it, run `scripts/icons.sh` to export the PNGs (needs `rsvg-convert` and `optipng`: `sudo apt install librsvg2-bin optipng`) and commit them. `server.js` is only used for local development.
 
 ## Project structure
 
@@ -52,7 +56,8 @@ Every push to `master` publishes `public/` to GitHub Pages, using the workflow i
 ├── .githooks/
 │   └── pre-commit     Runs npm run lint before each commit
 ├── scripts/
-│   └── lint.js        Runs each linter on the files git lists
+│   ├── lint.js        Runs each linter on the files git lists
+│   └── icons.sh       Exports the app icons from icons/icon.svg
 ├── eslint.config.mjs, .stylelintrc.json, .htmlvalidate.json, .markdownlint-cli2.jsonc
 │                      Linter settings
 ├── GUIDE.md           How to use the site, for players (linked from the page)
@@ -63,6 +68,9 @@ Every push to `master` publishes `public/` to GitHub Pages, using the workflow i
 └── public/            Everything the browser loads
     ├── index.html     Markup
     ├── styles.css     All styling (colors, fonts, layout, light and dark themes)
+    ├── manifest.webmanifest  Name, colors and icons for Add to Home Screen
+    ├── sw.js          Service worker: keeps every file for offline use
+    ├── icons/         App icons (icon.svg and the PNGs exported from it)
     └── js/            ES modules, loaded directly by the browser (no build step)
         ├── music.js     Notes, modes, chord types, spelling. No DOM code.
         ├── tooltips.js  Tooltip wording. No DOM code.
@@ -72,6 +80,7 @@ Every push to `master` publishes `public/` to GitHub Pages, using the workflow i
         ├── state.js     Key, mode, lock and selection state
         ├── theme.js     Light and dark theme switch
         ├── explain.js   Explanations on touch screens, which don't show tooltips
+        ├── offline.js   Registers the service worker
         ├── svg.js       SVG geometry and element helpers
         ├── ring.js      A reusable ring of labeled segments
         ├── drag.js      Drag-to-rotate with snapping and click detection

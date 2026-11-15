@@ -57,14 +57,27 @@ Each stage ends with something usable. A later stage is only worth starting if t
 
 ## Stage 2: Installable web app (PWA)
 
+**Status:** done. Safari's Add to Home Screen gives Modescope its own icon, opens it full screen, and it works without a connection.
+
 **Goal:** Modescope opens from the home screen like an app, full screen, and works without a connection. Still free, still no Mac and no App Store.
 
-### Stage 2 steps
+### What was done (stage 2)
 
-1. **Web app manifest.** Add `public/manifest.webmanifest` with the name, `"display": "standalone"`, theme and background colors taken from the existing color tokens, and icons. Link it from `index.html`, along with a `theme-color` meta and the `apple-mobile-web-app-*` metas.
-2. **Icons.** A 180 × 180 PNG `apple-touch-icon` (what iOS uses on the home screen), plus 192 and 512 PNGs for the manifest. A simple drawing of the wheel works well at small sizes.
-3. **Service worker.** Add `public/sw.js`, which caches the app shell (`index.html`, `styles.css` and every file in `js/`) so the app works offline. To make sure each deploy replaces the old cache, `pages.yml` stamps the cache name with the commit SHA (a one-line `sed` before uploading), so there's still no build step locally. Don't register the service worker on `localhost`, so live reload keeps working during development.
-4. **Install it.** In Safari: Share → Add to Home Screen.
+- **Web app manifest** (`public/manifest.webmanifest`): the name, `"display": "standalone"`, the light theme's `--bg` as background and theme color, and the icons. All its paths are relative, so it works under `/modescope/` on Pages and at `/` locally. `index.html` links it, along with the icons, a `theme-color` meta and the `apple-mobile-web-app-*` metas. `theme.js` keeps `theme-color` matching the page background, so the status bar follows the theme button too. `server.js` serves `.webmanifest` with the right type.
+- **Icons** (`public/icons/`). `icon.svg` is a C Ionian wheel drawn with the page's own geometry and colors, and it's also the favicon. `scripts/icons.sh` exports the 180 px `apple-touch-icon.png` and the 192 and 512 px manifest icons with `rsvg-convert` and `optipng` (`sudo apt install librsvg2-bin optipng`). The PNGs are committed, so deploying needs neither tool. The PNGs are opaque, since iOS turns transparency black, and the wheel stays inside the middle 80%, so Android can crop the 512 icon to a circle (`maskable`).
+- **Service worker** (`public/sw.js`). It keeps a copy of every file in `public/`, listed in `FILES`, and serves from that copy first, so the app opens offline. It also caches anything the list forgot, the first time it's fetched online. `npm run lint` fails if a file in `public/` isn't in `FILES`. `pages.yml` replaces `const VERSION = "dev";` with the commit's short SHA before publishing, so each deploy installs a new worker with a fresh cache, and installed apps update the next time they're opened online.
+- **Registration** (`js/offline.js`). It only registers over HTTPS, so the dev server's live reload is never served from a cache; the phone on `http://<LAN IP>:3000` couldn't use one anyway. Add `?sw` to the URL to try it on localhost.
+
+### Checking the PWA
+
+1. Locally in Firefox: with `npm start`, open <http://localhost:3000/?sw>. In `about:debugging` → This Firefox, the worker is listed under Service Workers. Stop the server and reload: the app still works. Unregister the worker afterwards so live reload behaves again.
+2. After pushing to `master`: the "Stamp the service worker" step passes in the Actions log, and the live `sw.js` shows the short SHA in place of `"dev"`.
+3. On the iPhone, open the live site in Safari and choose Share → Add to Home Screen. Then check that:
+   - the icon and name look right;
+   - it opens full screen, with nothing under the Dynamic Island;
+   - the status bar matches the light and dark themes, including after pressing the theme button. If it doesn't look right, try `black-translucent` for `apple-mobile-web-app-status-bar-style` in `index.html`;
+   - in Airplane Mode it still opens from the home screen, and everything works;
+   - after a new deploy, it picks up the change within one or two launches.
 
 ### What a PWA doesn't get you
 

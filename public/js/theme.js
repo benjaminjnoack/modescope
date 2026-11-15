@@ -32,6 +32,10 @@ function current() {
 function apply(button) {
   const theme = current();
   document.documentElement.dataset.theme = theme;
+  // The status bar of the home-screen app takes this color, so it follows the
+  // page background (--bg) rather than the system setting.
+  const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", bg);
   const label = theme === "dark" ? "Switch to the light theme" : "Switch to the dark theme";
   button.setAttribute("aria-label", label);
   button.title = label;
