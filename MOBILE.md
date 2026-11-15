@@ -13,6 +13,8 @@ Each stage ends with something usable. A later stage is only worth starting if t
 
 ## Stage 1: Mobile-friendly layout
 
+**Status:** done. Phones get their own layout: the controls pinned at the top, the panels stacked in one scrolling column, and the guitar neck upright in portrait. Tapping a term (or holding a button) shows its explanation in a panel.
+
 **Goal:** every feature is reachable and readable on an iPhone held upright, on the live site.
 
 ### Where things stand today

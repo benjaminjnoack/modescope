@@ -11,6 +11,7 @@ import { renderFretboard } from "./fretboard.js";
 import { voicingsFor } from "./guitar.js";
 import { createSvg, point, segmentPath } from "./svg.js";
 import { initTheme } from "./theme.js";
+import { initExplain } from "./explain.js";
 import * as tips from "./tooltips.js";
 
 // Ring sizes: notes outside, modes inside, key/mode label in the center.
@@ -43,6 +44,11 @@ const guitarName = document.getElementById("guitar-name");
 const guitar = document.getElementById("guitar");
 const guitarPrevious = document.getElementById("guitar-previous");
 const guitarNext = document.getElementById("guitar-next");
+const explainSheet = document.getElementById("explain-sheet");
+const explainText = document.getElementById("explain-text");
+
+// A phone held upright, as in styles.css: the guitar neck stands up.
+const portrait = window.matchMedia("(width <= 600px)");
 
 const noteRing = createRing(noteGroup, NOTES, NOTE_RING);
 const modeRing = createRing(modeGroup, MODES.map((mode) => mode.name), MODE_RING);
@@ -93,6 +99,11 @@ function render() {
 
   renderKeySignature();
   renderSelectedNote();
+
+  // The explanation panel, shown after tapping a term on a touch screen.
+  const explanation = state.explanation();
+  explainSheet.hidden = explanation === null;
+  explainText.textContent = explanation ?? "";
 }
 
 // "4♭", "2♯" or "0".
@@ -344,14 +355,15 @@ function renderGuitar(chordName, voicings) {
   const index = Math.min(state.guitarVoicingIndex(chordName), Math.max(voicings.length - 1, 0));
   const count = voicings.length;
   guitarName.textContent = "On guitar";
-  guitarName.title = tips.guitarTip(chordName);
+  const vertical = portrait.matches;
+  guitarName.title = tips.guitarTip(chordName, vertical);
   if (count > 0) {
     const counter = document.createElement("span");
     counter.className = "voicing-count";
     counter.textContent = ` · ${index + 1} of ${count}`;
     guitarName.append(counter);
   }
-  renderFretboard(guitar, voicings[index] ?? null, chordName);
+  renderFretboard(guitar, voicings[index] ?? null, chordName, { vertical });
 
   const step = (button, by) => {
     button.disabled = count < 2;
@@ -394,7 +406,8 @@ noteGroup.addEventListener("dblclick", () => {
   render();
 });
 
-// The relative/parallel switch in the toolbar does the same as a double-click.
+// The relative/parallel switch in the toolbar does the same as a double-click
+// (and is the way to do it on a phone, where a double tap isn't reliable).
 const setLocked = (locked) => {
   if (state.isNoteRingLocked() !== locked) state.toggleNoteRingLock();
   render();
@@ -403,6 +416,10 @@ relativeButton.addEventListener("click", () => setLocked(false));
 parallelButton.addEventListener("click", () => setLocked(true));
 
 initTheme(document.getElementById("theme-toggle"));
+initExplain({ sheet: explainSheet, closeButton: document.getElementById("explain-close"), onChange: render });
+
+// Turning the phone stands the guitar neck up or lays it down.
+portrait.addEventListener("change", render);
 
 makeDraggable(svg, modeGroup, {
   getRotation: state.getModeRotation,

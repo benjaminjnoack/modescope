@@ -136,7 +136,12 @@
 
 body {
   margin: 0;
-  padding: 24px 16px 40px;
+  /* Kept clear of an iPhone's notch and home bar (viewport-fit=cover). */
+  padding:
+    max(24px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right))
+    max(40px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -152,7 +157,15 @@ a { color: var(--link); }
 button {
   font: inherit;
   color: inherit;
+
+  /* Holding a button on a phone shows its explanation (explain.js), so
+     don't let the phone select its text or open its own menu. */
+  -webkit-touch-callout: none;
+  user-select: none;
 }
+
+/* Taps act at once instead of waiting to see if they're a double tap. */
+button, a { touch-action: manipulation; }
 
 .card {
   background: var(--card);
@@ -234,6 +247,10 @@ button[title] { cursor: pointer; }
   gap: 16px;
   padding: 12px 16px;
 }
+/* The two groups only matter on a phone, where the controls stay pinned
+   at the top; here their children sit in one row: title, readouts,
+   switch, links. */
+.toolbar-brand, .toolbar-controls { display: contents; }
 .toolbar h1 {
   margin: 0 4px 0 0;
   font-size: 1.4rem;
@@ -276,6 +293,7 @@ button[title] { cursor: pointer; }
   font-size: 0.875rem;
 }
 .toolbar-links {
+  order: 1;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -449,6 +467,10 @@ button[title] { cursor: pointer; }
   padding: 0;
   font-size: 0.8125rem;
 }
+
+@media (pointer: coarse) {
+  .key-signature-list button { height: 44px; }
+}
 .key-signature-list button:disabled {
   color: var(--disabled);
   cursor: help;
@@ -500,6 +522,16 @@ button[title] { cursor: pointer; }
 }
 .chord-table tbody th > span { margin-right: 6px; }
 .chord-table tr.current { background: var(--row-current); }
+/* The mode names stay put while the table scrolls sideways, so you always
+   know which row you're on. */
+.chord-table thead th:first-child,
+.chord-table tbody th {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--card);
+}
+.chord-table tr.current th { background: var(--row-current); }
 .chord-table tr.absent { opacity: 0.6; }
 .numeral-label {
   font-weight: 400;
@@ -532,6 +564,11 @@ button[title] { cursor: pointer; }
   background: transparent;
   white-space: nowrap;
   cursor: pointer;
+}
+/* Big enough for a finger, on touch screens. */
+@media (pointer: coarse) {
+  .chords button,
+  .lock-switch button { min-height: 44px; }
 }
 /* The chord being spelled, and the same chord in other modes. */
 .chords button.spelled {
@@ -688,4 +725,123 @@ button[title] { cursor: pointer; }
 #guitar .no-voicing {
   font-size: 16px;
   fill: var(--muted);
+}
+
+/* The explanation of a term, at the bottom of a touch screen (explain.js). */
+.explain-sheet {
+  position: fixed;
+  z-index: 10;
+  left: max(12px, env(safe-area-inset-left));
+  right: max(12px, env(safe-area-inset-right));
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  max-width: 560px;
+  margin-inline: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 14px 14px 18px;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 25%);
+}
+.explain-sheet[hidden] { display: none; }
+.explain-text {
+  flex: 1;
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+.explain-sheet .round-button { font-size: 1.25rem; }
+
+/* A phone held upright: one column that scrolls, under a bar with the
+   tonic, mode, key signature and the Relative/Parallel switch, which
+   stays at the top. The title and links above it scroll away. The guitar
+   neck stands upright (fretboard.js, from the same width in main.js). */
+@media (width <= 600px) {
+  body {
+    gap: 12px;
+    padding-top: max(12px, env(safe-area-inset-top));
+  }
+  .card {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .toolbar { display: contents; }
+  .toolbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-inline: 4px;
+  }
+  .toolbar-brand h1 { font-size: 1.25rem; }
+  .toolbar-links {
+    margin-left: auto;
+    gap: 14px;
+  }
+  .toolbar-controls {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: calc(10px + env(safe-area-inset-top)) 12px 10px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--card);
+    box-shadow: 0 2px 10px rgb(0 0 0 / 12%);
+  }
+  /* Label over value, three across: the mode gets the most room. */
+  .readouts {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 8px;
+  }
+  .readouts div {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+  }
+  .readouts dt {
+    font-size: 0.6875rem;
+    text-align: center;
+  }
+  .readouts dd {
+    justify-content: center;
+    padding: 4px 8px;
+  }
+  .lock-switch { margin-left: 0; }
+  .lock-switch button {
+    flex: 1 1 0;
+    padding: 4px 8px;
+    font-size: 0.8125rem;
+  }
+
+  .layout,
+  .chosen-chord {
+    flex-flow: column nowrap;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .wheel-card,
+  .chord-panel,
+  .chosen-summary,
+  .guitar-column { flex: none; }
+  .chosen-chord { gap: 20px; }
+
+  /* The wheel is drawn smaller here, so its labels are a little bigger. */
+  #note-ring text { font-size: 17px; }
+  #mode-ring text { font-size: 12px; }
+  #wheel .numeral { font-size: 15px; }
+
+  /* Two rows: 7♭ ... 0, then 1♯ ... 7♯. */
+  .key-signature-list { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+  .key-signature-list button { height: 44px; }
+
+  /* Nothing sits beside the tiles here, so they needn't keep room for a second row. */
+  .spelled-chord-notes { min-height: 0; }
+
+  #guitar {
+    max-width: 260px;
+    margin-inline: auto;
+  }
 }
