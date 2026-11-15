@@ -34,6 +34,10 @@ See [GUIDE.md](GUIDE.md) for how to use the site: the wheel, key signatures, the
 
 When the guitar shows a chord, its voicings come in this order: `PREFERRED` in `public/js/alternates.js` (chosen for this project), then `SUGGESTED` (common shapes added by Claude), then the one `guitar.js` works out.
 
+## Mobile
+
+[MOBILE.md](MOBILE.md) plans the path, in stages, from this web page to an iPhone app without a Mac.
+
 ## Deployment
 
 Every push to `master` publishes `public/` to GitHub Pages, using the workflow in `.github/workflows/pages.yml`. `server.js` is only used for local development.
@@ -51,6 +55,7 @@ Every push to `master` publishes `public/` to GitHub Pages, using the workflow i
 │                      Linter settings
 ├── GUIDE.md           How to use the site, for players (linked from the page)
 ├── ABOUT.md           Why the project exists and its goals
+├── MOBILE.md          Staged plan for getting the app onto iPhone
 ├── server.js          Static file server with live reload (no dependencies)
 ├── package.json       Scripts and dev-only linter dependencies
 └── public/            Everything the browser loads
