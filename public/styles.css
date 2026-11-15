@@ -231,3 +231,33 @@ body {
 .string-note { font-size: 16px; font-weight: bold; }
 .string-mark { font-size: 16px; }
 .no-voicing { font-size: 16px; fill: dimgray; }
+
+/* Arrows either side of the guitar heading, to step through voicings. */
+.guitar-heading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+}
+.voicing-arrow {
+  font: inherit;
+  font-size: 1.4rem;
+  line-height: 1;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid black;
+  background: white;
+  cursor: pointer;
+}
+.voicing-arrow:disabled {
+  color: lightgray;
+  border-color: lightgray;
+  cursor: help;
+}
+.voicing-count {
+  display: inline-block; /* Keeps the heading's dotted underline off the count. */
+  margin-left: 0.3rem;
+  font-size: 0.85rem;
+  font-weight: normal;
+  color: dimgray;
+}

@@ -1,6 +1,8 @@
-// Guitar fingerings, worked out from a chord's notes. No DOM code here.
+// Guitar fingerings, worked out from a chord's notes, plus hand-picked
+// alternates from alternates.js. No DOM code here.
 
-import { chordFormula, noteIndex, spellChord, NOTES } from "./music.js";
+import { ALTERNATES } from "./alternates.js";
+import { CHORD_TYPES, chordFormula, noteIndex, spellChord, NOTES } from "./music.js";
 
 // Standard tuning, low to high: E A D G B E, as indexes into NOTES.
 export const STRINGS = [
@@ -19,24 +21,83 @@ const MUTED = -1;
 
 const voicings = new Map();
 
-// The easiest root-position way to play a chord, from its root's name and
-// type, or null if there's no playable one. Returns:
+// Every way the app knows to play a chord, from its root's name and type:
+// first the easiest root-position one it works out itself, then the
+// hand-picked ones from alternates.js. Empty if there are none. Each is:
 // - frets: one per string, low E first; -1 is muted, 0 open.
 // - notes: what each string plays, as { name, degree } spelled from the
 //   chord (so D♭m's 3rd is F♭, not E), or null when muted.
 // - barre: { fret, from, to } (string indexes) when one finger lies across
 //   several strings, else null.
 // - fingers: the other fretted notes, as { string, fret }.
-export function voiceChord(rootName, type) {
+export function voicingsFor(rootName, type) {
   const key = `${rootName} ${type.suffix}`;
-  if (!voicings.has(key)) voicings.set(key, findVoicing(rootName, type));
+  if (!voicings.has(key)) {
+    const computed = findVoicing(rootName, type);
+    const all = [computed, ...alternateFrets(rootName, type)].filter(Boolean);
+    const unique = all.filter((frets, i) =>
+      all.findIndex((other) => other.join() === frets.join()) === i);
+    voicings.set(key, unique.flatMap((frets) => describe(rootName, type, frets) ?? []));
+  }
   return voicings.get(key);
 }
 
-function findVoicing(rootName, type) {
+// The hand-picked voicings for a chord, as fret lists. G♯m and A♭m share theirs.
+function alternateFrets(rootName, type) {
+  const root = noteIndex(rootName);
+  return Object.entries(ALTERNATES).flatMap(([chord, list]) => {
+    const [, name, suffix] = chord.match(/^([A-G][♯♭]?)(.*)$/);
+    return noteIndex(name) === root && suffix === type.suffix ? list.map(parseFrets) : [];
+  });
+}
+
+// "x32010" or "8 10 10 9 8 8" -> [-1, 3, 2, 0, 1, 0] or [8, 10, 10, 9, 8, 8].
+function parseFrets(text) {
+  const parts = text.includes(" ") ? text.split(" ") : [...text];
+  return parts.map((part) => (part === "x" ? MUTED : Number(part)));
+}
+
+// Problems with the voicings in alternates.js, as a list of messages
+// (empty when they're all fine). Run from Node:
+// node -e 'import("./public/js/guitar.js").then((g) => console.log(g.checkAlternates()))'
+export function checkAlternates() {
+  return Object.entries(ALTERNATES).flatMap(([chord, list]) => {
+    const match = chord.match(/^([A-G][♯♭]?)(.*)$/);
+    const type = match && CHORD_TYPES.find(({ suffix }) => suffix === match[2]);
+    if (!type) return [`${chord}: not a root and chord suffix from CHORD_TYPES`];
+    return list.flatMap((text) => {
+      const frets = parseFrets(text);
+      const where = `${chord} ${text}`;
+      if (frets.length !== STRINGS.length) return [`${where}: needs ${STRINGS.length} strings`];
+      if (frets.some((fret) => Number.isNaN(fret) || fret > FRETS)) {
+        return [`${where}: frets must be x or 0-${FRETS}`];
+      }
+      if (!describe(match[1], type, frets)) return [`${where}: plays a note that isn't in ${chord}`];
+      const { barre, fingers } = fingering(frets);
+      if (fingers.length + (barre ? 1 : 0) > 4) return [`${where}: needs more than four fingers`];
+      return [];
+    });
+  });
+}
+
+// A voicing's notes and fingering, or null if a string plays a note
+// that isn't in the chord.
+function describe(rootName, type, frets) {
   const names = spellChord(rootName, type);
   const degrees = chordFormula(type).split(" ");
   const tones = names.map(noteIndex);
+  const notes = frets.map((fret, i) => {
+    if (fret === MUTED) return null;
+    const tone = tones.indexOf(soundingNote(i, fret));
+    return tone === -1 ? undefined : { name: names[tone], degree: degrees[tone] };
+  });
+  if (notes.includes(undefined)) return null;
+  return { frets, notes, ...fingering(frets) };
+}
+
+// The easiest root-position voicing the app can find, as a fret list, or null.
+function findVoicing(rootName, type) {
+  const tones = spellChord(rootName, type).map(noteIndex);
   const root = tones[0];
   const required = tones.filter((_, i) => !optional(type, i));
   const third = tones[type.tones.findIndex(([degree]) => degree === 3)];
@@ -49,15 +110,7 @@ function findVoicing(rootName, type) {
       if (score !== null && (best === null || score < best.score)) best = { frets, score };
     }
   }
-  if (!best) return null;
-
-  const { frets } = best;
-  const notes = frets.map((fret, i) => {
-    if (fret === MUTED) return null;
-    const tone = tones.indexOf(soundingNote(i, fret));
-    return { name: names[tone], degree: degrees[tone] };
-  });
-  return { frets, notes, ...fingering(frets) };
+  return best && best.frets;
 }
 
 // Tones a guitarist usually leaves out when there aren't enough fingers or
@@ -133,22 +186,37 @@ function scoreVoicing(frets, root, third, required) {
 }
 
 // Which fingers press which strings. With more than four fretted notes,
-// the index finger lies flat across the lowest fret as a barre: F is
-// 1 3 3 2 1 1, a barre at fret 1 plus three fingers. A barre can't cross
-// a string that rings open.
+// the index finger lies flat across one fret as a barre: F is 1 3 3 2 1 1,
+// a barre at fret 1 plus three fingers. The barre doesn't have to be on the
+// lowest fret: C9 is x 3 2 3 3 3, a barre at fret 3 across the top three
+// strings with fingers on the A and D strings. A barre can't cross a string
+// that rings open or is fretted lower than it.
 export function fingering(frets) {
   const fretted = frets.flatMap((fret, string) => (fret > 0 ? [{ string, fret }] : []));
-  if (fretted.length <= 4) return { barre: null, fingers: fretted };
+  let best = { barre: null, fingers: fretted };
+  if (fretted.length <= 4) return best;
 
-  const low = Math.min(...fretted.map(({ fret }) => fret));
-  const onLow = fretted.filter(({ fret }) => fret === low).map(({ string }) => string);
-  const from = onLow[0];
-  const to = onLow[onLow.length - 1];
-  const crossesOpen = frets.slice(from, to + 1).some((fret) => fret === 0);
-  if (onLow.length < 2 || crossesOpen) return { barre: null, fingers: fretted };
-
-  return {
-    barre: { fret: low, from, to },
-    fingers: fretted.filter(({ fret }) => fret !== low),
-  };
+  const count = ({ barre, fingers }) => fingers.length + (barre ? 1 : 0);
+  const barreFrets = [...new Set(fretted.map(({ fret }) => fret))].sort((a, b) => a - b);
+  for (const fret of barreFrets) {
+    // Stretches of neighboring strings a finger at `fret` can lie across.
+    const runs = [[]];
+    frets.forEach((f, string) => {
+      if (f === MUTED || f >= fret) runs[runs.length - 1].push(string);
+      else runs.push([]);
+    });
+    for (const run of runs) {
+      const covered = run.filter((string) => frets[string] === fret);
+      if (covered.length < 2) continue;
+      const barre = { fret, from: covered[0], to: covered[covered.length - 1] };
+      const fingers = fretted.filter(({ string, fret: f }) =>
+        f !== fret || string < barre.from || string > barre.to);
+      // The lowest barre that leaves enough fingers is the usual one (the
+      // index finger): C is x 3 5 5 5 3, a barre at fret 3 with three
+      // fingers at fret 5, not a barre at 5 with fingers at 3.
+      if (count({ barre, fingers }) <= 4) return { barre, fingers };
+      if (count({ barre, fingers }) < count(best)) best = { barre, fingers };
+    }
+  }
+  return best;
 }

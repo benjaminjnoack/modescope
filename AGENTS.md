@@ -27,9 +27,10 @@ All browser code is in `public/js/`, loaded as native ES modules from `index.htm
 |---|---|
 | `music.js` | Theory data and pure functions: `NOTES`, `MODES`, `CHORD_TYPES`, `spellChord`, `scaleDegree`, `chordsOn`, `modeOffsetSemitones`. **No DOM.** |
 | `tooltips.js` | Builds tooltip strings. **No DOM.** |
-| `guitar.js` | Computes a guitar voicing for a chord (`voiceChord`): searches the neck for the easiest root-position fingering, finds barres (`fingering`). Memoized. **No DOM.** |
+| `guitar.js` | Guitar voicings for a chord (`voicingsFor`): first the easiest root-position fingering found by searching the neck, then the hand-picked alternates. Finds barres (`fingering`) and validates alternates (`checkAlternates`). Memoized. **No DOM.** |
+| `alternates.js` | `ALTERNATES`: hand-picked guitar voicings, keyed by chord name. Data only. **No DOM.** |
 | `fretboard.js` | `renderFretboard` — draws the horizontal guitar neck (nut left, high e on top) for a voicing. |
-| `state.js` | Module-level state (ring rotations, lock, selected note/spelling/chord) behind getter/setter functions. |
+| `state.js` | Module-level state (ring rotations, lock, selected note/spelling/chord, which guitar voicing is shown) behind getter/setter functions. |
 | `svg.js` | SVG helpers and wheel geometry. |
 | `ring.js` | `createRing` — a ring of labeled segments with `layout`, `indexOf`, `setLabel`. |
 | `drag.js` | `makeDraggable` — rotate-by-drag with snapping and tap detection via pointer events. |
@@ -52,7 +53,20 @@ All browser code is in `public/js/`, loaded as native ES modules from `index.htm
 - Order in `CHORD_TYPES` matters: the triads must stay first, because `main.js` uses `chordsOn(...).chords[0]` as the chord a Roman numeral stands for.
 - `MODES` is in parent-major-scale order (Ionian … Locrian); `modeOffsetSemitones` and the mode ring depend on that. Each mode's `numerals` must match the qualities its `intervals` produce.
 - Adding a chord type is only a `CHORD_TYPES` entry (`suffix`, `name`, `tones` as `[degree, semitones]`); listing, spelling, tooltips and the guitar voicing follow automatically. Guitar voicings come from the weights in `scoreVoicing` (`guitar.js`); if you change them, print the voicing of every root × chord type from Node and check familiar shapes (C x32010, F 133211, Bm x24432, D7 xx0212) still win. Degrees used must exist in `MAJOR_DEGREES` in `music.js`.
-- Keep `music.js` and `tooltips.js` free of DOM code.
+- Keep `music.js`, `tooltips.js`, `guitar.js` and `alternates.js` free of DOM code.
+
+## Guitar voicings
+
+The guitar at the bottom of the page shows the chosen chord. The first voicing is always the one the scoring formula in `guitar.js` picks; the ‹ › arrows beside "{chord} on guitar" cycle through the hand-picked alternates in `public/js/alternates.js` (wrapping around, disabled when there's only one). The shown index is per chord (`state.guitarVoicingIndex`), so picking another chord starts again at the computed one.
+
+When asked to suggest or add alternate voicings for a chord (e.g. "alternates for A9"):
+
+- Add them to `ALTERNATES` in `alternates.js` under the chord name, root plus a `CHORD_TYPES` suffix: `"A9": ["x02423"]`. Use `♯`/`♭`; one entry covers both spellings of a root (`"B♭m"` is also A♯m).
+- Write frets low E to high e, `x` muted, `0` open: six characters (`"x02423"`), or space-separated when any fret is 10+ (`"8 10 10 9 8 8"`). Frets 0–12 only, since the neck stops at 12.
+- Only standard, commonly taught shapes you're confident of: barre chords on the E and A strings, open-position variants, common jazz voicings. Every string must play a chord tone. Inversions are allowed but say so when suggesting them.
+- Don't add the computed voicing; duplicates are dropped, so it would just not show. Check what it is first.
+- Verify: `node -e 'import("./public/js/guitar.js").then((g) => console.log(g.checkAlternates()))'` must print `[]` (it catches non-chord tones, wrong string count, frets out of range and shapes needing more than four fingers). Then print `voicingsFor(root, chordType(suffix))` to see the order and barre for the chord.
+- Barres are detected, not written: `fingering` uses the lowest fret where one finger can cover 2+ strings and leave ≤ 4 fingers in all, and only when more than four strings are fretted.
 - Style: 2-space indent, double quotes, semicolons, `const`/arrow functions, small focused modules. Comments explain intent in plain English, often with a concrete musical example (e.g. "in C Lydian, D is D F♯ A: 2 ♯4 6"); follow that style.
 - Tooltips use native `title` attributes (and `<title>` inside SVG). Wording is plain, beginner-friendly English.
 - Commit messages are short and imperative; the project works directly on `master`.

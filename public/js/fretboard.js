@@ -23,7 +23,7 @@ const MIDDLE_Y = (TOP_Y + BOTTOM_Y) / 2;
 // The middle of the space behind a fret, where a finger presses.
 const fretX = (fret) => NUT_X + (fret - 0.5) * FRET_WIDTH;
 
-// Redraw the neck for a voicing from voiceChord (or null if there is none).
+// Redraw the neck for one voicing from voicingsFor (or null if there is none).
 // `chordName` (e.g. "G7") is used in the tooltips.
 export function renderFretboard(svg, voicing, chordName) {
   svg.replaceChildren(...neck());

@@ -146,3 +146,11 @@ export function guitarTip(chordName) {
     `strings, O is an open string and X a string you don't play. The letters left of the ` +
     `nut are the notes each string sounds.`;
 }
+
+// The arrows beside the guitar heading.
+export function voicingArrowTip(chordName, count, next) {
+  if (count < 2) return `This is the only way to play ${chordName} the app knows.`;
+  return `${next ? "Next" : "Previous"} way to play ${chordName} (${count} in all). The first ` +
+    `is the easiest one the app works out; the others are hand-picked, like barre chords ` +
+    `further up the neck.`;
+}

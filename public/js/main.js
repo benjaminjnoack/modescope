@@ -8,7 +8,7 @@ import * as state from "./state.js";
 import { createRing } from "./ring.js";
 import { makeDraggable } from "./drag.js";
 import { renderFretboard } from "./fretboard.js";
-import { voiceChord } from "./guitar.js";
+import { voicingsFor } from "./guitar.js";
 import { createSvg, point, segmentPath } from "./svg.js";
 import * as tips from "./tooltips.js";
 
@@ -32,6 +32,8 @@ const spelledName = document.getElementById("spelled-chord-name");
 const spelledNotes = document.getElementById("spelled-chord-notes");
 const guitarName = document.getElementById("guitar-name");
 const guitar = document.getElementById("guitar");
+const guitarPrevious = document.getElementById("guitar-previous");
+const guitarNext = document.getElementById("guitar-next");
 
 const noteRing = createRing(noteGroup, NOTES, NOTE_RING);
 const modeRing = createRing(modeGroup, MODES.map((mode) => mode.name), MODE_RING);
@@ -250,11 +252,34 @@ function renderSpelledChord(rootName, suffix, mode) {
     return item;
   }));
 
-  // The same chord on the guitar neck at the bottom of the page.
-  const chordName = rootName + suffix;
+  renderGuitar(rootName + suffix, voicingsFor(rootName, type));
+}
+
+// The chord on the guitar neck at the bottom of the page. The arrows step
+// through its voicings, wrapping around, when there's more than one.
+function renderGuitar(chordName, voicings) {
+  const index = Math.min(state.guitarVoicingIndex(chordName), Math.max(voicings.length - 1, 0));
+  const count = voicings.length;
   guitarName.textContent = `${chordName} on guitar`;
   guitarName.title = tips.guitarTip(chordName);
-  renderFretboard(guitar, voiceChord(rootName, type), chordName);
+  if (count > 1) {
+    const counter = document.createElement("span");
+    counter.className = "voicing-count";
+    counter.textContent = ` ${index + 1} of ${count}`;
+    guitarName.append(counter);
+  }
+  renderFretboard(guitar, voicings[index] ?? null, chordName);
+
+  const step = (button, by) => {
+    button.disabled = count < 2;
+    button.title = tips.voicingArrowTip(chordName, count, by > 0);
+    button.onclick = () => {
+      state.setGuitarVoicingIndex(chordName, (index + by + count) % count);
+      render();
+    };
+  };
+  step(guitarPrevious, -1);
+  step(guitarNext, 1);
 }
 
 makeDraggable(svg, noteGroup, {

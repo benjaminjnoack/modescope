@@ -167,6 +167,19 @@ export function noteName(note) {
   return note === selection.note ? spellings(note)[selection.spelling] : NOTES[note];
 }
 
+// Which of a chord's guitar voicings is shown (0 = the computed one). It
+// belongs to one chord, so choosing another chord starts again from 0:
+// { chord: "Gm", index: 1 }.
+let guitarVoicing = { chord: null, index: 0 };
+
+export function guitarVoicingIndex(chord) {
+  return guitarVoicing.chord === chord ? guitarVoicing.index : 0;
+}
+
+export function setGuitarVoicingIndex(chord, index) {
+  guitarVoicing = { chord, index };
+}
+
 // Save and restore the selection (used to undo the clicks of a double-click).
 export function getSelection() {
   return selection;
