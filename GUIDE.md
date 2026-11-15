@@ -2,7 +2,7 @@
 
 Modescope is a wheel for exploring the seven modes (Ionian through Locrian) and the chords in them. Spin it to change the key or mode, pick a note to see which chords on it belong to which mode, and see how to spell and play each one.
 
-**Open it:** https://benjaminjnoack.github.io/modescope/ · [Why it exists](ABOUT.md)
+**Open it:** https://benjaminjnoack.github.io/modescope/
 
 ## The wheel
 
