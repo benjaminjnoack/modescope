@@ -1,7 +1,7 @@
-// Guitar fingerings, worked out from a chord's notes, plus hand-picked
-// alternates from alternates.js. No DOM code here.
+// Guitar fingerings: hand-picked ones from alternates.js, plus one worked
+// out from the chord's notes. No DOM code here.
 
-import { ALTERNATES } from "./alternates.js";
+import { PREFERRED, SUGGESTED } from "./alternates.js";
 import { CHORD_TYPES, chordFormula, noteIndex, spellChord, NOTES } from "./music.js";
 
 // Standard tuning, low to high: E A D G B E, as indexes into NOTES.
@@ -21,9 +21,10 @@ const MUTED = -1;
 
 const voicings = new Map();
 
-// Every way the app knows to play a chord, from its root's name and type:
-// first the easiest root-position one it works out itself, then the
-// hand-picked ones from alternates.js. Empty if there are none. Each is:
+// Every way the app knows to play a chord, from its root's name and type,
+// best first: the PREFERRED ones from alternates.js, then the SUGGESTED
+// ones, then the easiest root-position one it works out itself. Empty if
+// there are none. Each is:
 // - frets: one per string, low E first; -1 is muted, 0 open.
 // - notes: what each string plays, as { name, degree } spelled from the
 //   chord (so D♭m's 3rd is F♭, not E), or null when muted.
@@ -33,8 +34,11 @@ const voicings = new Map();
 export function voicingsFor(rootName, type) {
   const key = `${rootName} ${type.suffix}`;
   if (!voicings.has(key)) {
-    const computed = findVoicing(rootName, type);
-    const all = [computed, ...alternateFrets(rootName, type)].filter(Boolean);
+    const all = [
+      ...listedFrets(PREFERRED, rootName, type),
+      ...listedFrets(SUGGESTED, rootName, type),
+      findVoicing(rootName, type),
+    ].filter(Boolean);
     const unique = all.filter((frets, i) =>
       all.findIndex((other) => other.join() === frets.join()) === i);
     voicings.set(key, unique.flatMap((frets) => describe(rootName, type, frets) ?? []));
@@ -42,10 +46,11 @@ export function voicingsFor(rootName, type) {
   return voicings.get(key);
 }
 
-// The hand-picked voicings for a chord, as fret lists. G♯m and A♭m share theirs.
-function alternateFrets(rootName, type) {
+// A chord's voicings from one table in alternates.js, as fret lists.
+// G♯m and A♭m share theirs.
+function listedFrets(table, rootName, type) {
   const root = noteIndex(rootName);
-  return Object.entries(ALTERNATES).flatMap(([chord, list]) => {
+  return Object.entries(table).flatMap(([chord, list]) => {
     const [, name, suffix] = chord.match(/^([A-G][♯♭]?)(.*)$/);
     return noteIndex(name) === root && suffix === type.suffix ? list.map(parseFrets) : [];
   });
@@ -61,7 +66,7 @@ function parseFrets(text) {
 // (empty when they're all fine). Run from Node:
 // node -e 'import("./public/js/guitar.js").then((g) => console.log(g.checkAlternates()))'
 export function checkAlternates() {
-  return Object.entries(ALTERNATES).flatMap(([chord, list]) => {
+  return [PREFERRED, SUGGESTED].flatMap(Object.entries).flatMap(([chord, list]) => {
     const match = chord.match(/^([A-G][♯♭]?)(.*)$/);
     const type = match && CHORD_TYPES.find(({ suffix }) => suffix === match[2]);
     if (!type) return [`${chord}: not a root and chord suffix from CHORD_TYPES`];

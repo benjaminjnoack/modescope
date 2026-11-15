@@ -77,9 +77,9 @@ At the bottom of the page, the chosen chord is shown on a guitar neck in standar
 - Left of the nut, **O** marks a string played open and **X** a string you don't play.
 - Next to them is the **note each string sounds**, spelled as in the chord (D♭m shows F♭, not E).
 
-The fingering is worked out by the app rather than looked up: it's the easiest one it finds with the chord's root as the lowest note, no more than four fingers and a reach of four frets. Like most guitarists, it may leave out the 5th of a chord with four or more notes, and the 9th of an 11th or 13th chord (so a 13th chord can be just 1 3 ♭7 13).
+When a chord has no hand-picked voicing, the fingering is worked out by the app: it's the easiest one it finds with the chord's root as the lowest note, no more than four fingers and a reach of four frets. Like most guitarists, it may leave out the 5th of a chord with four or more notes, and the 9th of an 11th or 13th chord (so a 13th chord can be just 1 3 ♭7 13).
 
-Many chords also have hand-picked **alternate voicings**, such as barre chords further up the neck (Gm as a barre at the 3rd fret, C as an A-shape barre at the 3rd fret). When a chord has more than one, the heading shows how many ("1 of 3") and the ‹ › arrows on either side step through them. The first is always the one the app worked out. Picking another chord starts again from the first.
+Many chords also have hand-picked voicings, such as barre chords further up the neck. When a chord has more than one, the heading shows how many ("1 of 3") and the ‹ › arrows on either side step through them, in this order: voicings chosen for this project (`PREFERRED` in `alternates.js`, like Gm as a barre at the 3rd fret), then common shapes suggested by Claude (`SUGGESTED`), then the one the app works out. Picking another chord starts again from the first.
 
 ### Tooltips
 
@@ -103,7 +103,7 @@ Every push to `master` publishes `public/` to GitHub Pages, using the workflow i
         ├── music.js     Notes, modes, chord types, spelling. No DOM code.
         ├── tooltips.js  Tooltip wording. No DOM code.
         ├── guitar.js    Guitar fingerings worked out for each chord. No DOM code.
-        ├── alternates.js Hand-picked alternate guitar voicings
+        ├── alternates.js Hand-picked guitar voicings
         ├── fretboard.js Draws the guitar neck
         ├── state.js     Key, mode, lock and selection state
         ├── svg.js       SVG geometry and element helpers
@@ -117,7 +117,7 @@ Every push to `master` publishes `public/` to GitHub Pages, using the workflow i
 - **Add a chord type:** add an entry to `CHORD_TYPES` in `music.js`, with its suffix, a name for the tooltip and its tones as `[degree, semitones above the root]`. It's then listed, spelled, explained and fingered on the guitar automatically.
 - **Change a mode's Roman numerals or description:** edit `MODES` in `music.js`.
 - **Change colors or fonts:** edit `styles.css`. Segments use the classes `selected` (gold) and `in-mode` (light yellow).
-- **Add an alternate guitar voicing:** add it to `ALTERNATES` in `alternates.js`, e.g. `"A9": ["x02423"]` (frets from low E to high e, `x` for muted). Check it with `node -e 'import("./public/js/guitar.js").then((g) => console.log(g.checkAlternates()))'`, which should print `[]`.
+- **Add a guitar voicing:** add it to `PREFERRED` in `alternates.js` (it's then shown first), e.g. `"A9": ["x02423"]` (frets from low E to high e, `x` for muted). Check it with `node -e 'import("./public/js/guitar.js").then((g) => console.log(g.checkAlternates()))'`, which should print `[]`.
 - **Change tooltip wording:** edit `tooltips.js`.
 
 ## License
