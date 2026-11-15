@@ -69,9 +69,19 @@ Under the wheel, the chosen chord is spelled out note by note. It starts as the 
 - **Letters:** each chord tone gets its own letter, so D♭m is D♭ F♭ A♭, not D♭ E A♭.
 - **Degree numbers:** the numbers under each note are scale degrees counted from the tonic of the mode the chord was chosen from, not from the chord's root. D in C Lydian reads 2 ♯4 6 rather than 1 3 5.
 
+### Guitar
+
+At the bottom of the page, the chosen chord is shown on a guitar neck in standard tuning (E A D G B E), lying on its side: the nut is on the left, the high e string is on top (as in guitar tab), and frets 1–12 run to the right.
+
+- **Dots** are fingers. A **bar** is one finger lying flat across several strings at one fret (a barre chord).
+- Left of the nut, **O** marks a string played open and **X** a string you don't play.
+- Next to them is the **note each string sounds**, spelled as in the chord (D♭m shows F♭, not E).
+
+The fingering is worked out by the app rather than looked up: it's the easiest one it finds with the chord's root as the lowest note, no more than four fingers and a reach of four frets. Like most guitarists, it may leave out the 5th of a chord with four or more notes, and the 9th of an 11th or 13th chord (so a 13th chord can be just 1 3 ♭7 13).
+
 ### Tooltips
 
-Hover over the heading under the wheel, the degree numbers, the Roman numerals or the chord buttons for an explanation of each term.
+Hover over the heading under the wheel, the degree numbers, the Roman numerals, the chord buttons or the guitar's strings, dots and heading for an explanation of each term.
 
 ## Deployment
 
@@ -90,6 +100,8 @@ Every push to `master` publishes `public/` to GitHub Pages, using the workflow i
     └── js/            ES modules, loaded directly by the browser (no build step)
         ├── music.js     Notes, modes, chord types, spelling. No DOM code.
         ├── tooltips.js  Tooltip wording. No DOM code.
+        ├── guitar.js    Guitar fingerings worked out for each chord. No DOM code.
+        ├── fretboard.js Draws the guitar neck
         ├── state.js     Key, mode, lock and selection state
         ├── svg.js       SVG geometry and element helpers
         ├── ring.js      A reusable ring of labeled segments
@@ -99,7 +111,7 @@ Every push to `master` publishes `public/` to GitHub Pages, using the workflow i
 
 ## Extending it
 
-- **Add a chord type:** add an entry to `CHORD_TYPES` in `music.js`, with its suffix, a name for the tooltip and its tones as `[degree, semitones above the root]`. It's then listed, spelled and explained automatically.
+- **Add a chord type:** add an entry to `CHORD_TYPES` in `music.js`, with its suffix, a name for the tooltip and its tones as `[degree, semitones above the root]`. It's then listed, spelled, explained and fingered on the guitar automatically.
 - **Change a mode's Roman numerals or description:** edit `MODES` in `music.js`.
 - **Change colors or fonts:** edit `styles.css`. Segments use the classes `selected` (gold) and `in-mode` (light yellow).
 - **Change tooltip wording:** edit `tooltips.js`.

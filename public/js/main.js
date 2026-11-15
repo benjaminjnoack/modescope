@@ -7,6 +7,8 @@ import {
 import * as state from "./state.js";
 import { createRing } from "./ring.js";
 import { makeDraggable } from "./drag.js";
+import { renderFretboard } from "./fretboard.js";
+import { voiceChord } from "./guitar.js";
 import { createSvg, point, segmentPath } from "./svg.js";
 import * as tips from "./tooltips.js";
 
@@ -28,6 +30,8 @@ const chordPanelTitle = document.getElementById("chord-panel-title");
 const chordList = document.getElementById("chord-list");
 const spelledName = document.getElementById("spelled-chord-name");
 const spelledNotes = document.getElementById("spelled-chord-notes");
+const guitarName = document.getElementById("guitar-name");
+const guitar = document.getElementById("guitar");
 
 const noteRing = createRing(noteGroup, NOTES, NOTE_RING);
 const modeRing = createRing(modeGroup, MODES.map((mode) => mode.name), MODE_RING);
@@ -245,6 +249,12 @@ function renderSpelledChord(rootName, suffix, mode) {
     item.append(noteLabel, degreeLabel);
     return item;
   }));
+
+  // The same chord on the guitar neck at the bottom of the page.
+  const chordName = rootName + suffix;
+  guitarName.textContent = `${chordName} on guitar`;
+  guitarName.title = tips.guitarTip(chordName);
+  renderFretboard(guitar, voiceChord(rootName, type), chordName);
 }
 
 makeDraggable(svg, noteGroup, {

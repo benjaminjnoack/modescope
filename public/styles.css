@@ -200,3 +200,34 @@ body {
   font-size: 0.8rem;
   color: dimgray;
 }
+
+/* Guitar neck at the bottom of the page: nut on the left, high e on top. */
+.guitar {
+  width: 100%;
+  max-width: 900px;
+  margin-top: 1.5rem;
+  text-align: center;
+}
+.guitar h2 {
+  display: inline-block;
+  margin: 0.5rem 0;
+  font-size: 1.2rem;
+}
+#guitar {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+#guitar text {
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+.string { stroke: dimgray; }
+.fret { stroke: darkgray; stroke-width: 2; }
+.nut { stroke: black; stroke-width: 8; }
+.inlay { fill: lightgray; }
+.fret-number { font-size: 13px; fill: dimgray; }
+.finger, .barre { fill: black; }
+.string-note { font-size: 16px; font-weight: bold; }
+.string-mark { font-size: 16px; }
+.no-voicing { font-size: 16px; fill: dimgray; }

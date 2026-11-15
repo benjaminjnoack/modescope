@@ -114,3 +114,35 @@ export function signatureButtonTip({ count, major, minor, locked, target, tonicN
   return `${base} The outer ring is locked, so ${tonicName} stays the tonic. ` +
     `Click to switch to the mode on ${tonicName} with this signature: ${target}.`;
 }
+
+// "♭3" -> "♭3rd", "9" -> "9th", "11" -> "11th".
+function withOrdinal(label) {
+  const { accidental, number } = parseDegree(label);
+  const suffix = number > 3 ? "th" : ["st", "nd", "rd"][number - 1];
+  return `${accidental}${number}${suffix}`;
+}
+
+// One string of the guitar chord. `note` is { name, degree } as spelled
+// in the chord (degree counted from the chord's root, e.g. "♭3"), or null
+// when the string is muted: "B string, fret 3: D, the 5th of G".
+export function guitarStringTip(stringName, fret, note, chordName) {
+  const string = `${stringName[0].toUpperCase()}${stringName.slice(1)} string`;
+  if (!note) return `${string}: muted (X). Don't play it, or rest a finger on it to keep it quiet.`;
+  const where = fret === 0 ? "open (O), no finger needed" : `fret ${fret}`;
+  const role = note.degree === "1" ? "the root" : `the ${withOrdinal(note.degree)}`;
+  return `${string}, ${where}: ${note.name}, ${role} of ${chordName}.`;
+}
+
+// A barre: one finger lying flat across several strings at one fret.
+export function barreTip(fret, strings) {
+  return `Barre at fret ${fret}: lay your first finger flat across ${strings} strings, ` +
+    `pressing them all at once.`;
+}
+
+// The heading over the guitar.
+export function guitarTip(chordName) {
+  return `One way to play ${chordName} on a guitar in standard tuning (E A D G B E), ` +
+    `with its root as the lowest note. Dots are fingers, a bar is one finger across several ` +
+    `strings, O is an open string and X a string you don't play. The letters left of the ` +
+    `nut are the notes each string sounds.`;
+}

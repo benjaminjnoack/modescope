@@ -27,6 +27,8 @@ All browser code is in `public/js/`, loaded as native ES modules from `index.htm
 |---|---|
 | `music.js` | Theory data and pure functions: `NOTES`, `MODES`, `CHORD_TYPES`, `spellChord`, `scaleDegree`, `chordsOn`, `modeOffsetSemitones`. **No DOM.** |
 | `tooltips.js` | Builds tooltip strings. **No DOM.** |
+| `guitar.js` | Computes a guitar voicing for a chord (`voiceChord`): searches the neck for the easiest root-position fingering, finds barres (`fingering`). Memoized. **No DOM.** |
+| `fretboard.js` | `renderFretboard` — draws the horizontal guitar neck (nut left, high e on top) for a voicing. |
 | `state.js` | Module-level state (ring rotations, lock, selected note/spelling/chord) behind getter/setter functions. |
 | `svg.js` | SVG helpers and wheel geometry. |
 | `ring.js` | `createRing` — a ring of labeled segments with `layout`, `indexOf`, `setLabel`. |
@@ -49,7 +51,7 @@ All browser code is in `public/js/`, loaded as native ES modules from `index.htm
 - Use the real Unicode symbols `♯`, `♭`, `°` everywhere (data, labels, tooltips), never `#`/`b`. `parseNote` and the tooltip regexes rely on them.
 - Order in `CHORD_TYPES` matters: the triads must stay first, because `main.js` uses `chordsOn(...).chords[0]` as the chord a Roman numeral stands for.
 - `MODES` is in parent-major-scale order (Ionian … Locrian); `modeOffsetSemitones` and the mode ring depend on that. Each mode's `numerals` must match the qualities its `intervals` produce.
-- Adding a chord type is only a `CHORD_TYPES` entry (`suffix`, `name`, `tones` as `[degree, semitones]`); listing, spelling and tooltips follow automatically. Degrees used must exist in `MAJOR_DEGREES` in `music.js`.
+- Adding a chord type is only a `CHORD_TYPES` entry (`suffix`, `name`, `tones` as `[degree, semitones]`); listing, spelling, tooltips and the guitar voicing follow automatically. Guitar voicings come from the weights in `scoreVoicing` (`guitar.js`); if you change them, print the voicing of every root × chord type from Node and check familiar shapes (C x32010, F 133211, Bm x24432, D7 xx0212) still win. Degrees used must exist in `MAJOR_DEGREES` in `music.js`.
 - Keep `music.js` and `tooltips.js` free of DOM code.
 - Style: 2-space indent, double quotes, semicolons, `const`/arrow functions, small focused modules. Comments explain intent in plain English, often with a concrete musical example (e.g. "in C Lydian, D is D F♯ A: 2 ♯4 6"); follow that style.
 - Tooltips use native `title` attributes (and `<title>` inside SVG). Wording is plain, beginner-friendly English.
