@@ -5,6 +5,18 @@
   "license": "MIT",
   "description": "Explore the seven modes of the diatonic scale and the chords in them on an interactive wheel.",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "lint": "node scripts/lint.js",
+    "lint:fix": "node scripts/lint.js --fix",
+    "prepare": "git config core.hooksPath .githooks"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.15.0",
+    "globals": "17.14.0",
+    "html-validate": "11.21.1",
+    "markdownlint-cli2": "0.24.1",
+    "stylelint": "18.0.0",
+    "stylelint-config-standard": "41.0.0"
   }
 }

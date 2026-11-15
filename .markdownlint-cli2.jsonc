@@ -1,0 +1,8 @@
+{
+  "config": {
+    // The docs keep each paragraph on one line.
+    "MD013": false,
+    // Tables use compact |---| delimiter rows.
+    "MD060": false
+  }
+}

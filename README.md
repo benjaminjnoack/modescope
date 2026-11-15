@@ -4,19 +4,29 @@ An interactive wheel for exploring the seven modes of the diatonic scale (Ionian
 
 Spin the wheel to change the key or mode, select a note to see which chords on it are in each parallel mode, and click a chord to spell it out with its scale degrees and see it on a guitar neck. Hover over terms to see what they mean.
 
-**Live site:** https://benjaminjnoack.github.io/modescope/
+**Live site:** <https://benjaminjnoack.github.io/modescope/>
 
 ## Running it
 
-Requires [Node.js](https://nodejs.org/) (any recent version). There are no dependencies to install.
+Requires [Node.js](https://nodejs.org/) (any recent version). The app itself has no dependencies.
 
-```
+```sh
 npm start
 ```
 
-Then open http://localhost:3000. To use a different port, run `PORT=8080 npm start`.
+Then open <http://localhost:3000>. To use a different port, run `PORT=8080 npm start`.
 
 The page reloads itself whenever a file in `public/` changes. Changes to `server.js` need a server restart.
+
+### Linting
+
+```sh
+npm install        # installs the linters and turns on the pre-commit hook
+npm run lint       # checks HTML, CSS, JS and Markdown
+npm run lint:fix   # fixes what can be fixed automatically
+```
+
+ESLint, Stylelint, html-validate and markdownlint check every file git tracks or would track, so anything gitignored is skipped. The pre-commit hook runs `npm run lint` and blocks the commit if it fails. The linters are dev-only and nothing they need is deployed.
 
 ## Using it
 
@@ -30,13 +40,19 @@ Every push to `master` publishes `public/` to GitHub Pages, using the workflow i
 
 ## Project structure
 
-```
+```text
 ├── .github/workflows/
 │   └── pages.yml      Deploys public/ to GitHub Pages
+├── .githooks/
+│   └── pre-commit     Runs npm run lint before each commit
+├── scripts/
+│   └── lint.js        Runs each linter on the files git lists
+├── eslint.config.mjs, .stylelintrc.json, .htmlvalidate.json, .markdownlint-cli2.jsonc
+│                      Linter settings
 ├── GUIDE.md           How to use the site, for players (linked from the page)
 ├── ABOUT.md           Why the project exists and its goals
 ├── server.js          Static file server with live reload (no dependencies)
-├── package.json
+├── package.json       Scripts and dev-only linter dependencies
 └── public/            Everything the browser loads
     ├── index.html     Markup
     ├── styles.css     All styling (colors, fonts, layout)

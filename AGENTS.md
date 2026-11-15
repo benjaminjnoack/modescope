@@ -6,14 +6,15 @@ Modescope is a single-page, dependency-free web app: an SVG wheel for exploring 
 
 ## Running
 
-```
+```sh
 npm start            # node server.js, serves public/ at http://localhost:3000
 PORT=8080 npm start
 ```
 
 - `server.js` is a dev-only static server that injects a live-reload snippet into HTML and reloads the page on any change under `public/`. Changes to `server.js` itself need a restart.
-- There is no build step, no bundler, no `node_modules`, no linter and no test suite. Don't add dependencies, a build, or tooling unless asked.
+- There is no build step, no bundler and no test suite. The only dependencies are dev-only linters (`npm install` once, which also turns on the pre-commit hook); the app in `public/` has no runtime dependencies. Don't add more dependencies, a build, or tooling unless asked.
 - To check a change, run the server and use the page. For pure logic in `music.js` / `tooltips.js` you can also import them from Node in a scratch script (they are ES modules with no DOM access).
+- **Before you call a change done, run `npm run lint` and fix everything it reports** (`npm run lint:fix` handles most of it). It checks every HTML, CSS, JS and Markdown file that isn't gitignored, using ESLint, Stylelint, html-validate and markdownlint. The pre-commit hook (`.githooks/pre-commit`) runs the same check. Don't get around it with `--no-verify` or by turning rules off unless asked.
 
 ## Deployment
 
@@ -21,7 +22,7 @@ Every push to `master` deploys `public/` to GitHub Pages (`.github/workflows/pag
 
 ## Code layout
 
-All browser code is in `public/js/`, loaded as native ES modules from `index.html` (`js/main.js` is the entry).
+All browser code is in `public/js/`, loaded as native ES modules from `index.html` (`js/main.js` is the entry). Linting lives outside `public/`: `scripts/lint.js` runs the linters on the files git lists, configured by `eslint.config.mjs`, `.stylelintrc.json`, `.htmlvalidate.json` and `.markdownlint-cli2.jsonc`.
 
 | File | Role |
 |---|---|
