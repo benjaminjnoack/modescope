@@ -57,19 +57,59 @@ Each stage ends with something usable. A later stage is only worth starting if t
 
 ## Stage 2: Installable web app (PWA)
 
-**Goal:** Modescope opens from the home screen like an app, full screen, and works without a connection. Still free, still no Mac and no App Store.
+**Status:** built, waiting to be checked on the iPhone. Added to the home screen from Safari, Modescope gets its own icon, opens full screen like an app and keeps working without a connection. It is still free, with no Mac and no App Store.
 
-### Stage 2 steps
+**Goal:** Modescope opens from the home screen like an app, full screen, and works offline.
 
-1. **Web app manifest.** Add `public/manifest.webmanifest` with the name, `"display": "standalone"`, theme and background colors taken from the existing color tokens, and icons. Link it from `index.html`, along with a `theme-color` meta and the `apple-mobile-web-app-*` metas.
-2. **Icons.** A 180 × 180 PNG `apple-touch-icon` (what iOS uses on the home screen), plus 192 and 512 PNGs for the manifest. A simple drawing of the wheel works well at small sizes.
-3. **Service worker.** Add `public/sw.js`, which caches the app shell (`index.html`, `styles.css` and every file in `js/`) so the app works offline. To make sure each deploy replaces the old cache, `pages.yml` stamps the cache name with the commit SHA (a one-line `sed` before uploading), so there's still no build step locally. Don't register the service worker on `localhost`, so live reload keeps working during development.
-4. **Install it.** In Safari: Share → Add to Home Screen.
+### What was built
+
+- **The app's description** (`public/manifest.webmanifest`). It gives the name, full-screen (`standalone`) display, background and theme colors, and icons. Its paths are relative, so it works both on the live site (under `/modescope/`) and on the dev server. `index.html` links it and adds what iOS reads directly: the home-screen icon (`apple-touch-icon`), the title under it, the status bar style and a `theme-color`. `server.js` serves the manifest with its proper type.
+- **A status bar that follows the theme.** `theme.js` sets `theme-color` to the page background (`--bg`) whenever the theme changes. The status bar of the installed app then matches the page, including when the theme button overrides the phone's setting.
+- **Icons** (`public/icons/`). `icon.svg` is the source: a wheel showing C Ionian, drawn with the page's own ring sizes and colors. It doubles as the browser tab's favicon.
+  - `scripts/icons.sh` exports `apple-touch-icon.png` (180 px, for iOS) and `icon-192.png` and `icon-512.png` (for the manifest) with `rsvg-convert`, then shrinks them with `optipng` (`sudo apt install librsvg2-bin optipng`).
+  - The PNGs are committed, so deploying needs neither tool. Run the script again only after changing the SVG.
+  - The background is solid, because iOS fills transparent pixels with black.
+  - The wheel stays inside the middle 80%, so Android can crop the 512 px icon to a circle (`maskable`).
+- **Offline use** (`public/sw.js`, a service worker). On first visit it stores every file in `public/`, from its `FILES` list, and from then on serves them from that copy before trying the network. Opening the app always gets the stored page, even offline or with a `?query` in the URL. If a file was left off the list, it's still stored the first time it loads online.
+- **A check that nothing is left out.** `npm run lint` (and so the pre-commit hook) fails if a file in `public/` isn't in `FILES`. When adding a file to `public/`, add it there too.
+- **Updates on each deploy.** Before publishing, `pages.yml` replaces `const VERSION = "dev";` in `sw.js` with the commit's short SHA, and fails the deploy if that line isn't found. The changed `sw.js` makes the phone install the new worker, which fetches every file again into a fresh store and deletes the old one. The installed app shows the new version the next time it's opened online.
+- **Kept out of development** (`js/offline.js`). The worker is only registered over HTTPS, as on the live site. Live reload on the dev server never fights a stored copy, and the phone on `http://<LAN IP>:3000` couldn't use a worker anyway, since iOS requires a secure connection. To try it on the computer, add `?sw` to the URL.
+
+### Checking offline use in Firefox
+
+1. Run `npm start` and open <http://localhost:3000/?sw> in Firefox.
+2. Open `about:debugging` → **This Firefox**. Modescope's worker is listed under **Service Workers**, as running.
+3. In the page's developer tools (F12), the **Storage** tab → **Cache Storage** shows `modescope-dev`, holding every file in `public/`.
+4. Stop the server (Ctrl+C) and reload the page. It still loads, and everything works: drag the rings, pick a chord, step through voicings.
+5. Back in `about:debugging`, press **Unregister** on the worker, so live reload behaves normally again.
+6. Open <http://localhost:3000> without `?sw` and check in `about:debugging` that no worker comes back.
+
+### Checking the deploy
+
+1. Push to `master`. In the **Actions** tab, the deploy run's **Stamp the service worker with this commit** step passes.
+2. Open <https://benjaminjnoack.github.io/modescope/sw.js>. The `VERSION` line shows the commit's short SHA instead of `"dev"`.
+3. Open <https://benjaminjnoack.github.io/modescope/manifest.webmanifest> and the icons it lists, to check that they load.
+
+### Checking on the iPhone (stage 2)
+
+1. In Safari, open <https://benjaminjnoack.github.io/modescope/>, wait for it to load, then choose **Share → Add to Home Screen**. The preview shows the wheel icon and the name Modescope.
+2. Open it from the home screen.
+3. Turn on Airplane Mode, swipe the app away in the app switcher, and open it again.
+4. Turn Airplane Mode off. Push a small visible change, wait for the deploy, then open the app once, close it and open it again.
+
+**Done when** all of these hold on the iPhone:
+
+- The icon on the home screen is sharp, with no black corners, and the name under it reads Modescope.
+- It opens full screen, without Safari's address bar or toolbar, and nothing sits under the Dynamic Island or the home bar.
+- The status bar matches the page in the light and dark themes, including after pressing the theme button. If its text is hard to read, change `apple-mobile-web-app-status-bar-style` in `index.html` from `default` to `black-translucent` and check again.
+- In Airplane Mode the app opens, and everything works.
+- After a deploy, the change appears within one or two launches.
+- The Guide and About links still open (in Safari, since they're on GitHub).
 
 ### What a PWA doesn't get you
 
 - No App Store listing, and no haptic feedback (the web can't vibrate on iOS).
-- iOS may clear the storage of a home-screen app that hasn't been opened for a long time. The only thing stored is the theme choice, so this barely matters.
+- iOS may clear the storage of a home-screen app that hasn't been opened for a long time. The only thing stored is the theme choice, so this barely matters. The offline copy is downloaded again at the next launch with a connection.
 
 **Decision point:** for personal use, this may be all you need. Live with it for a while before moving on.
 

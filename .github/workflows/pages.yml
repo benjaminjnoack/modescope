@@ -25,6 +25,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      # Name the service worker's cache after this commit, so every deploy
+      # replaces the copy that home-screen installs keep. The grep fails the
+      # deploy if the sed ever stops matching.
+      - name: Stamp the service worker with this commit
+        run: |
+          sed -i "s/^const VERSION = \"dev\";/const VERSION = \"${GITHUB_SHA::7}\";/" public/sw.js
+          grep -q "^const VERSION = \"${GITHUB_SHA::7}\";" public/sw.js
       - uses: actions/upload-pages-artifact@v3
         with:
           path: public

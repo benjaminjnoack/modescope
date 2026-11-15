@@ -91,3 +91,5 @@ Held upright, the page is one column that you scroll: the wheel, then the chord 
 - The key signatures are in two rows: 7♭ to 0, then 1♯ to 7♯.
 - The chord table scrolls sideways. The mode names stay in place so you know which row you're on.
 - The guitar neck stands upright like a chord chart: the nut is at the top, the low E string on the left and the high e on the right, with each string's note and O or X above the nut. Turn the phone sideways to see it lying down.
+
+To use it like an app, open the site in Safari and choose Share → Add to Home Screen. It then opens full screen from its own icon and works without a connection. It updates itself the next time it's opened online.

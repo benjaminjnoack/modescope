@@ -18,11 +18,11 @@ PORT=8080 npm start
 
 ## Deployment
 
-Every push to `master` deploys `public/` to GitHub Pages (`.github/workflows/pages.yml`). Anything outside `public/` is not shipped, so the app must work as plain static files: use relative paths and don't depend on `server.js`.
+Every push to `master` deploys `public/` to GitHub Pages (`.github/workflows/pages.yml`). Anything outside `public/` is not shipped, so the app must work as plain static files: use relative paths and don't depend on `server.js`. The workflow also stamps `public/sw.js` with the commit (`const VERSION = "dev";` becomes the short SHA), so each deploy replaces the offline copy that home-screen installs keep; don't reformat that line.
 
 ## Code layout
 
-All browser code is in `public/js/`, loaded as native ES modules from `index.html` (`js/main.js` is the entry). Linting lives outside `public/`: `scripts/lint.js` runs the linters on the files git lists, configured by `eslint.config.mjs`, `.stylelintrc.json`, `.htmlvalidate.json` and `.markdownlint-cli2.jsonc`.
+All browser code is in `public/js/`, loaded as native ES modules from `index.html` (`js/main.js` is the entry). Next to `index.html` are `manifest.webmanifest` (name, colors and icons for Add to Home Screen), `sw.js` (the service worker that caches every file for offline use) and `icons/` (`icon.svg` is the source; `scripts/icons.sh` exports the PNGs with `rsvg-convert` and `optipng`, and they're committed). Linting lives outside `public/`: `scripts/lint.js` runs the linters on the files git lists, configured by `eslint.config.mjs`, `.stylelintrc.json`, `.htmlvalidate.json` and `.markdownlint-cli2.jsonc`.
 
 | File | Role |
 |---|---|
@@ -37,7 +37,8 @@ All browser code is in `public/js/`, loaded as native ES modules from `index.htm
 | `drag.js` | `makeDraggable` — rotate-by-drag with snapping and tap detection via pointer events. |
 | `main.js` | Grabs DOM elements, wires events, and `render()`s everything from state. |
 | `explain.js` | Touch screens, which don't show tooltips: tapping a term, or holding a button, puts its tooltip text in `state.explanation()`, which `render()` shows in a panel at the bottom. Reads the `title`s already on the page. |
-| `theme.js` | Light/dark theme: follows the system until the theme button is pressed, then remembers the choice in `localStorage`. Sets `data-theme` on `<html>`. |
+| `theme.js` | Light/dark theme: follows the system until the theme button is pressed, then remembers the choice in `localStorage`. Sets `data-theme` on `<html>`, and the `theme-color` meta to `--bg` for the home-screen app's status bar. |
+| `offline.js` | Registers `sw.js` so the installed app opens offline. Only over HTTPS (or with `?sw` in the URL), so the dev server's live reload isn't served from a cache. |
 | `styles.css` | All styling. Colors are custom properties on `:root`, redefined for the dark theme (both under `prefers-color-scheme` and `[data-theme="dark"]`; keep the two in sync). Each mode has a color, `--mode-0` (Ionian) … `--mode-6`; a `mode-N` class sets `--mode` for an element. State is expressed with classes (`selected`, `in-mode`, `locked`, `current`, `absent`, `spelled`, `same-chord`, `dragging`). |
 
 ## How it works
@@ -59,6 +60,7 @@ All browser code is in `public/js/`, loaded as native ES modules from `index.htm
 - Keep `music.js`, `tooltips.js`, `guitar.js` and `alternates.js` free of DOM code.
 - Style: 2-space indent, double quotes, semicolons, `const`/arrow functions, small focused modules. Comments explain intent in plain English, often with a concrete musical example (e.g. "in C Lydian, D is D F♯ A: 2 ♯4 6"); follow that style.
 - Tooltips use native `title` attributes (and `<title>` inside SVG). Wording is plain, beginner-friendly English. On touch screens `explain.js` shows the same text, so a new tooltip needs nothing extra.
+- Every file in `public/` must be listed in `FILES` in `public/sw.js`, or it's missing when the installed app is offline. `npm run lint` checks this.
 - Phones (`width <= 600px`, the same query in `styles.css` and `main.js`) get their own layout rather than a squeezed desktop one: the toolbar's controls stay pinned at the top, the panels stack in one scrolling column, and the guitar neck stands upright.
 - Commit messages are short and imperative; the project works directly on `master`.
 

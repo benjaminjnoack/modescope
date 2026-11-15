@@ -12,6 +12,7 @@ import { voicingsFor } from "./guitar.js";
 import { createSvg, point, segmentPath } from "./svg.js";
 import { initTheme } from "./theme.js";
 import { initExplain } from "./explain.js";
+import { initOffline } from "./offline.js";
 import * as tips from "./tooltips.js";
 
 // Ring sizes: notes outside, modes inside, key/mode label in the center.
@@ -416,6 +417,7 @@ relativeButton.addEventListener("click", () => setLocked(false));
 parallelButton.addEventListener("click", () => setLocked(true));
 
 initTheme(document.getElementById("theme-toggle"));
+initOffline();
 initExplain({ sheet: explainSheet, closeButton: document.getElementById("explain-close"), onChange: render });
 
 // Turning the phone stands the guitar neck up or lays it down.
