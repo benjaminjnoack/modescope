@@ -66,12 +66,21 @@ export function renderFretboard(svg, voicing, chordName) {
   });
 }
 
-// The empty neck: frets, inlay dots, fret numbers, strings and the nut.
+// The empty neck: the wood (maple in the light theme, ebony in the dark),
+// frets, inlay dots, fret numbers, strings and the nut.
 function neck() {
-  const parts = [];
+  const parts = [createSvg("rect", {
+    class: "wood", x: NUT_X, y: TOP_Y - 12, width: END_X - NUT_X, height: BOTTOM_Y - TOP_Y + 24, rx: 4,
+  })];
+  // A few faint lines of grain along the neck.
+  for (const y of [TOP_Y + 5, TOP_Y + 2.2 * STRING_GAP, BOTTOM_Y - 1.4 * STRING_GAP, BOTTOM_Y + 6]) {
+    parts.push(createSvg("path", {
+      class: "grain", d: `M ${NUT_X} ${y} C 300 ${y + 5}, 560 ${y - 6}, ${END_X} ${y + 2}`,
+    }));
+  }
   for (let fret = 1; fret <= FRETS; fret++) {
     const x = NUT_X + fret * FRET_WIDTH;
-    parts.push(createSvg("line", { class: "fret", x1: x, y1: TOP_Y, x2: x, y2: BOTTOM_Y }));
+    parts.push(createSvg("line", { class: "fret", x1: x, y1: TOP_Y - 12, x2: x, y2: BOTTOM_Y + 12 }));
   }
   for (const fret of INLAYS) {
     parts.push(createSvg("circle", { class: "inlay", cx: fretX(fret), cy: MIDDLE_Y, r: 6 }));
@@ -80,7 +89,7 @@ function neck() {
     parts.push(createSvg("circle", { class: "inlay", cx: fretX(FRETS), cy: y, r: 6 }));
   }
   for (const fret of [...INLAYS, FRETS]) {
-    parts.push(createSvg("text", { class: "fret-number", x: fretX(fret), y: BOTTOM_Y + 24 }, fret));
+    parts.push(createSvg("text", { class: "fret-number", x: fretX(fret), y: BOTTOM_Y + 28 }, fret));
   }
   STRINGS.forEach((_, string) => {
     const y = stringY(string);
@@ -90,6 +99,8 @@ function neck() {
       "stroke-width": 1 + (STRINGS.length - 1 - string) * 0.3,
     }));
   });
-  parts.push(createSvg("line", { class: "nut", x1: NUT_X, y1: TOP_Y - 2, x2: NUT_X, y2: BOTTOM_Y + 2 }));
+  parts.push(createSvg("rect", {
+    class: "nut", x: NUT_X - 5, y: TOP_Y - 14, width: 10, height: BOTTOM_Y - TOP_Y + 28, rx: 2,
+  }));
   return parts;
 }

@@ -8,50 +8,90 @@
   <script type="module" src="js/main.js"></script>
 </head>
 <body>
-  <h1>Modescope</h1>
+  <header class="toolbar card">
+    <h1>Modescope</h1>
+    <dl class="readouts">
+      <div>
+        <dt>Tonic</dt>
+        <dd id="toolbar-tonic"></dd>
+      </div>
+      <div>
+        <dt>Mode</dt>
+        <dd id="toolbar-mode"></dd>
+      </div>
+      <div>
+        <dt>Key sig.</dt>
+        <dd id="toolbar-signature"></dd>
+      </div>
+    </dl>
+    <div class="segmented lock-switch" role="group" aria-label="What turning the inner ring does">
+      <button id="relative-modes" type="button" title="Relative modes: turning the inner ring keeps the notes and moves the tonic, so C Ionian becomes D Dorian. The outer ring can be turned.">Relative · keep notes</button>
+      <button id="parallel-modes" type="button" title="Parallel modes: turning the inner ring keeps the tonic and changes the notes, so C Ionian becomes C Dorian. The outer ring is locked.">Parallel · keep tonic</button>
+    </div>
+    <!-- GUIDE and ABOUT aren't in public/, so they aren't deployed; link to them on GitHub,
+         which shows the Markdown formatted. -->
+    <nav class="toolbar-links">
+      <a href="https://github.com/benjaminjnoack/modescope/blob/master/GUIDE.md" target="_blank" rel="noopener">Guide</a>
+      <a href="https://github.com/benjaminjnoack/modescope/blob/master/ABOUT.md" target="_blank" rel="noopener">About</a>
+      <button id="theme-toggle" type="button" class="round-button" aria-label="Switch theme">
+        <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+    </nav>
+  </header>
+
   <main class="layout">
-  <div class="wheel-column">
-  <svg id="wheel" viewBox="-220 -220 440 440">
-    <g id="note-ring" class="ring"></g>
-    <path id="selected-marker" class="selected-marker"></path>
-    <g id="mode-ring" class="ring"></g>
-    <g id="numerals"></g>
-    <text id="key-name" class="key-name" x="0" y="-6"></text>
-    <text id="mode-name" class="mode-name" x="0" y="20"></text>
-    <text id="key-signature" class="key-signature" x="0" y="44"></text>
-  </svg>
+    <section class="wheel-card card">
+      <svg id="wheel" viewBox="-225 -225 450 450">
+        <g id="note-ring" class="ring"></g>
+        <path id="selected-marker" class="selected-marker"></path>
+        <g id="mode-ring" class="ring"></g>
+        <g id="numerals"></g>
+        <circle class="wheel-center" r="72"></circle>
+        <text id="key-name" class="key-name" x="0" y="-12"></text>
+        <text id="mode-name" class="mode-name" x="0" y="16"></text>
+        <text id="key-signature" class="key-signature" x="0" y="38"></text>
+      </svg>
 
-  <section class="key-signatures">
-    <h2 class="has-tip" title="The sharps or flats at the start of each line of a staff. Pick the one in your songbook to jump to its notes, then turn the inner ring to find the mode.">Key signature</h2>
-    <ol id="key-signature-list" class="key-signature-list"></ol>
-  </section>
+      <ul class="legend">
+        <li><span class="swatch tonic"></span>Tonic</li>
+        <li><span class="swatch in-mode"></span>In the mode</li>
+        <li><span class="swatch outside"></span>Outside</li>
+        <li><span class="swatch selected-note"></span>Selected</li>
+      </ul>
 
-  <section class="spelled-chord">
-    <h2 id="spelled-chord-name"></h2>
-    <ol id="spelled-chord-notes" class="spelled-chord-notes"></ol>
-  </section>
-  </div>
+      <section class="key-signatures">
+        <h2 class="label has-tip" title="The sharps or flats at the start of each line of a staff. Pick the one in your songbook to jump to its notes, then turn the inner ring to find the mode.">Key signature</h2>
+        <ol id="key-signature-list" class="segmented key-signature-list"></ol>
+      </section>
+    </section>
 
-  <aside id="chord-panel" class="chord-panel">
-    <h2 id="chord-panel-title"></h2>
-    <ol id="chord-list" class="chord-list"></ol>
-  </aside>
+    <section id="chord-panel" class="chord-panel card">
+      <h2 id="chord-panel-title"></h2>
+      <p id="chord-panel-subtitle" class="subtitle"></p>
+      <div class="table-scroll">
+        <table class="chord-table">
+          <thead>
+            <tr id="chord-table-head"></tr>
+          </thead>
+          <tbody id="chord-table-body"></tbody>
+        </table>
+      </div>
+    </section>
   </main>
 
-  <section class="guitar">
-    <div class="guitar-heading">
-      <button id="guitar-previous" type="button" class="voicing-arrow">‹</button>
-      <h2 id="guitar-name" class="has-tip"></h2>
-      <button id="guitar-next" type="button" class="voicing-arrow">›</button>
+  <section class="chosen-chord card">
+    <div class="chosen-summary">
+      <p id="chosen-label" class="chosen-label"></p>
+      <h2 id="spelled-chord-name" class="spelled-chord-name"></h2>
+      <ol id="spelled-chord-notes" class="spelled-chord-notes"></ol>
+      <div class="guitar-heading">
+        <button id="guitar-previous" type="button" class="round-button voicing-arrow" aria-label="Previous voicing">‹</button>
+        <span id="guitar-name" class="guitar-name has-tip"></span>
+        <button id="guitar-next" type="button" class="round-button voicing-arrow" aria-label="Next voicing">›</button>
+      </div>
     </div>
     <svg id="guitar" viewBox="0 0 900 200"></svg>
   </section>
-
-  <!-- GUIDE and ABOUT aren't in public/, so they aren't deployed; link to them on GitHub,
-       which shows the Markdown formatted. -->
-  <footer class="page-footer">
-    <a href="https://github.com/benjaminjnoack/modescope/blob/master/GUIDE.md" target="_blank" rel="noopener">How to use it</a>
-    <a href="https://github.com/benjaminjnoack/modescope/blob/master/ABOUT.md" target="_blank" rel="noopener">About</a>
-  </footer>
 </body>
 </html>

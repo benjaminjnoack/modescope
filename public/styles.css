@@ -1,29 +1,322 @@
-body {
-  font-family: sans-serif;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 2rem 1rem;
+/* Colors. The light theme is the default; the dark one applies when the
+   system asks for it (unless the theme button chose light) or when the
+   theme button chose dark. theme.js sets data-theme on <html>. */
+:root {
+  color-scheme: light;
+
+  --bg: #f6f5f1;
+  --card: #fff;
+  --border: #e6e2d8;
+  --text: #1d2024;
+  --muted: #5b6068;
+  --soft: #f1efe9; /* Behind segmented controls. */
+  --raised: #fff; /* The chosen button in a segmented control. */
+  --tile: #f6f5f1;
+  --accent: #3b4ba8; /* The selected note, links, the guitar's fingers. */
+  --link: #3b4ba8;
+  --tonic: #e9b949;
+  --tonic-text: #1d2024;
+  --in-mode: #f6e7bf;
+  --in-mode-text: #1d2024;
+  --outside: #efede8;
+  --outside-text: #6b7078;
+  --locked: #6b7078;
+  --wheel-center: #fbfaf7;
+  --row-current: #fbf3dc;
+  --rule: #efece4;
+  --disabled: #b9b5ab;
+
+  /* Guitar: a maple neck with black dots. */
+  --wood: #e9c98f;
+  --grain: #d9b677;
+  --inlay: #2b2622;
+  --fret: #a8a196;
+  --string: #6e6456;
+  --nut: #f7f1e3;
+
+  /* One color per mode, dark enough to outline chords on a light page. */
+  --mode-0: #b07a12;
+  --mode-1: #2b7bb9;
+  --mode-2: #8b5cc4;
+  --mode-3: #2e8b57;
+  --mode-4: #c9562f;
+  --mode-5: #4659c9;
+  --mode-6: #6b7280;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --bg: #171613;
+    --card: #211f1b;
+    --border: #34312b;
+    --text: #eceae4;
+    --muted: #a8a49a;
+    --soft: #2a2823;
+    --raised: #3a372f;
+    --tile: #2a2823;
+    --accent: #9aa8ff;
+    --link: #afbbff;
+    --tonic: #e9b949;
+    --tonic-text: #1d1b16;
+    --in-mode: #4a4130;
+    --in-mode-text: #f3eedf;
+    --outside: #2a2824;
+    --outside-text: #8f8b82;
+    --locked: #a8a49a;
+    --wheel-center: #1b1a17;
+    --row-current: #2d2a22;
+    --rule: #2e2b26;
+    --disabled: #5c5850;
+    --wood: #2a2420;
+    --grain: #332c27;
+    --inlay: #dcd5c6;
+    --fret: #8e8b86;
+    --string: #b7b0a3;
+    --nut: #ede6d6;
+    --mode-0: #f2c14e;
+    --mode-1: #6fb7f0;
+    --mode-2: #c49bf0;
+    --mode-3: #7dd39a;
+    --mode-4: #f59a72;
+    --mode-5: #8c9bff;
+    --mode-6: #a9b0ba;
+  }
+}
+
+/* The same dark colors, chosen with the theme button. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #171613;
+  --card: #211f1b;
+  --border: #34312b;
+  --text: #eceae4;
+  --muted: #a8a49a;
+  --soft: #2a2823;
+  --raised: #3a372f;
+  --tile: #2a2823;
+  --accent: #9aa8ff;
+  --link: #afbbff;
+  --tonic: #e9b949;
+  --tonic-text: #1d1b16;
+  --in-mode: #4a4130;
+  --in-mode-text: #f3eedf;
+  --outside: #2a2824;
+  --outside-text: #8f8b82;
+  --locked: #a8a49a;
+  --wheel-center: #1b1a17;
+  --row-current: #2d2a22;
+  --rule: #2e2b26;
+  --disabled: #5c5850;
+  --wood: #2a2420;
+  --grain: #332c27;
+  --inlay: #dcd5c6;
+  --fret: #8e8b86;
+  --string: #b7b0a3;
+  --nut: #ede6d6;
+  --mode-0: #f2c14e;
+  --mode-1: #6fb7f0;
+  --mode-2: #c49bf0;
+  --mode-3: #7dd39a;
+  --mode-4: #f59a72;
+  --mode-5: #8c9bff;
+  --mode-6: #a9b0ba;
+}
+
+/* Anything marked with a mode's class gets that mode's color as --mode. */
+.mode-0 { --mode: var(--mode-0); }
+.mode-1 { --mode: var(--mode-1); }
+.mode-2 { --mode: var(--mode-2); }
+.mode-3 { --mode: var(--mode-3); }
+.mode-4 { --mode: var(--mode-4); }
+.mode-5 { --mode: var(--mode-5); }
+.mode-6 { --mode: var(--mode-6); }
+
+body {
+  margin: 0;
+  padding: 24px 16px 40px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 1220px;
+  margin-inline: auto;
+}
+
+a { color: var(--link); }
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 22px;
+  box-sizing: border-box;
+}
+
+.label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Anything with a tooltip shows a help cursor; words get a dotted underline. */
+[title], .numeral { cursor: help; }
+button[title] { cursor: pointer; }
+.has-tip { text-decoration: underline dotted; }
+
+.round-button {
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: none;
+}
+.round-button:disabled {
+  color: var(--disabled);
+  cursor: help;
+}
+
+/* A row of buttons in a tray, the chosen one raised. */
+.segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--soft);
+}
+.segmented button {
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.segmented button.current,
+.segmented button[aria-pressed="true"] {
+  background: var(--raised);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 15%);
+}
+
+.mode-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--mode);
+  flex: none;
+}
+
+/* Toolbar: name, tonic/mode/key signature, the lock switch and links. */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+}
+.toolbar h1 {
+  margin: 0 4px 0 0;
+  font-size: 1.4rem;
+  letter-spacing: -0.02em;
+}
+.readouts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 0;
+}
+.readouts div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.readouts dt {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.readouts dd {
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 9px;
+  background: var(--tile);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* Two halves that share the width on a phone rather than stack. */
+.lock-switch {
+  margin-left: auto;
+  flex-wrap: nowrap;
+}
+.lock-switch button {
+  flex: 1 1 auto;
+  min-height: 40px;
+  padding: 4px 14px;
+  font-size: 0.875rem;
+}
+.toolbar-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.875rem;
+}
+
+/* Theme button: a moon in the light theme, a sun in the dark. */
+.round-button svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.icon-sun { display: none; }
+:root[data-theme="dark"] .icon-sun { display: block; }
+:root[data-theme="dark"] .icon-moon { display: none; }
+
+/* The wheel and the chord table, side by side when there's room. */
 .layout {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 2rem;
-  width: 100%;
+  gap: 18px;
+  align-items: stretch;
 }
 
-.wheel-column {
-  flex: 0 1 400px;
+.wheel-card {
+  flex: 1 1 440px;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
 }
 
 #wheel {
   display: block;
   width: 100%;
-  max-width: 400px;
+  max-width: 440px;
   height: auto;
   touch-action: none; /* Let the page handle touch drags instead of scrolling. */
   user-select: none;
@@ -32,149 +325,260 @@ body {
 #wheel text {
   text-anchor: middle;
   dominant-baseline: central;
+  fill: var(--text);
 }
 
-/* Rings */
+/* Rings, with gaps between the segments. */
 .ring { cursor: grab; }
 .ring.dragging { cursor: grabbing; }
 
-/* Locked note ring: can't be turned, shown with a heavy gray outline. */
+.segment {
+  stroke: var(--card);
+  stroke-width: 3;
+}
+
+#note-ring .segment { fill: var(--outside); }
+#note-ring .segment.in-mode { fill: var(--in-mode); }
+#note-ring .segment.selected { fill: var(--tonic); }
+#note-ring text {
+  font-size: 16px;
+  fill: var(--outside-text);
+}
+#note-ring text.in-mode {
+  fill: var(--in-mode-text);
+  font-weight: 600;
+}
+#note-ring text.selected {
+  fill: var(--tonic-text);
+  font-weight: 700;
+}
+
+/* Locked note ring: can't be turned, shown with a heavy outline. */
 .ring.locked { cursor: default; }
 .ring.locked .segment {
-  stroke: dimgray;
+  stroke: var(--locked);
   stroke-width: 4;
 }
 
-.segment {
-  fill: white;
-  stroke: black;
+/* Each mode tinted with its color; the current mode more strongly. */
+#mode-ring .segment { fill: color-mix(in srgb, var(--mode) 18%, var(--card)); }
+#mode-ring .segment.selected { fill: color-mix(in srgb, var(--mode) 45%, var(--card)); }
+#mode-ring text {
+  font-size: 11px;
+  font-weight: 500;
 }
-.segment.in-mode { fill: lightyellow; }
-.segment.selected { fill: gold; }
+#mode-ring text.selected { font-weight: 700; }
 
 /* Outline around the selected segment, drawn on top of the ring. */
 .selected-marker {
   fill: none;
-  stroke: royalblue;
+  stroke: var(--accent);
   stroke-width: 4;
+  stroke-linejoin: round;
   pointer-events: none;
 }
 
-#note-ring text { font-size: 16px; }
-#mode-ring text { font-size: 12px; }
+.wheel-center { fill: var(--wheel-center); }
 
 /* Labels */
-.numeral {
-  font-size: 16px;
-  font-weight: bold;
+#wheel .numeral {
+  font-size: 14px;
+  font-weight: 600;
+  fill: var(--muted);
 }
 .key-name {
-  font-size: 26px;
-  font-weight: bold;
+  font-size: 30px;
+  font-weight: 700;
 }
-.mode-name { font-size: 14px; }
-.key-signature {
-  font-size: 13px;
-  fill: dimgray;
+.mode-name { font-size: 13px; }
+#wheel .key-signature {
+  font-size: 11px;
+  fill: var(--muted);
 }
 
-/* Key signature picker, under the wheel: 7♭ ... 0 ... 7♯ */
-.key-signatures { text-align: center; }
-.key-signatures h2 {
-  display: inline-block;
-  margin: 0.5rem 0;
-  font-size: 1rem;
-}
-.key-signature-list {
+/* What the wheel's colors mean. */
+.legend {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.1rem;
+  gap: 8px 16px;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.swatch.tonic { background: var(--tonic); }
+.swatch.in-mode { background: var(--in-mode); }
+.swatch.outside {
+  background: var(--outside);
+  border: 1px solid var(--border);
+}
+.swatch.selected-note { border: 2px solid var(--accent); }
+
+/* Key signature picker, under the wheel: 7♭ ... 0 ... 7♯ */
+.key-signatures {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+/* All fifteen on one line, each an equal share of the width. */
+.key-signature-list {
+  list-style: none;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(15, minmax(0, 1fr));
+  align-self: stretch;
 }
 .key-signature-list button {
-  font: inherit;
-  font-size: 0.85rem;
-  min-width: 1.45rem;
-  border: 1px solid black;
-  background: white;
-  padding: 0.1rem 0;
-  cursor: pointer;
-}
-.key-signature-list button.current {
-  background: gold;
-  font-weight: bold;
+  width: 100%;
+  height: 34px;
+  padding: 0;
+  font-size: 0.8125rem;
 }
 .key-signature-list button:disabled {
-  color: lightgray;
-  border-color: lightgray;
+  color: var(--disabled);
   cursor: help;
 }
 
-/* Anything with a tooltip shows a help cursor; words get a dotted underline. */
-[title], .numeral { cursor: help; }
-.has-tip { text-decoration: underline dotted; }
-
-/* Chord panel */
+/* Chord panel: a table of the chords on the selected note. */
 .chord-panel {
-  flex: 0 1 22rem;
+  flex: 999 1 600px;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 .chord-panel h2 {
-  margin-top: 0;
-  font-size: 1.2rem;
+  margin: 0;
+  font-size: 1.375rem;
 }
-.chord-list {
+.subtitle {
+  margin: -8px 0 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+.table-scroll { overflow-x: auto; }
+.chord-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.chord-table thead th {
+  text-align: left;
+  padding: 8px 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+.chord-table thead th:first-child { padding-left: 8px; }
+.chord-table tbody th,
+.chord-table td {
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+.chord-table tbody th {
+  text-align: left;
+  padding: 10px 8px;
+  white-space: nowrap;
+}
+.chord-table tbody th > span { margin-right: 6px; }
+.chord-table tr.current { background: var(--row-current); }
+.chord-table tr.absent { opacity: 0.6; }
+.numeral-label {
+  font-weight: 400;
+  color: var(--muted);
+}
+.chord-table .empty {
+  display: inline-block;
+  padding: 6px 4px;
+  color: var(--outside-text);
+}
+.absent-note {
+  color: var(--muted);
+  padding-top: 10px;
+}
+
+/* Chord buttons, outlined in their mode's color. */
+.chords {
   list-style: none;
   margin: 0;
   padding: 0;
-  border: 1px solid black;
-}
-.chord-list > li { padding: 0.5rem 0.75rem; }
-.chord-list > li + li { border-top: 1px solid black; }
-.chord-list > li.current { background: gold; }
-.chord-list > li.absent { color: gray; }
-
-.chord-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  font-weight: bold;
-}
-
-/* Chord names wrap onto as many lines as needed. */
-.chords {
-  list-style: none;
-  margin: 0.4rem 0 0;
-  padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
+  gap: 4px;
 }
 .chords button {
-  font: inherit;
-  border: 1px solid black;
-  background: white;
-  padding: 0.1rem 0.4rem;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 16px;
+  border: 1px solid var(--mode);
+  background: transparent;
+  white-space: nowrap;
   cursor: pointer;
 }
 /* The chord being spelled, and the same chord in other modes. */
 .chords button.spelled {
-  background: black;
-  color: white;
-  font-weight: bold;
+  background: var(--text);
+  color: var(--card);
+  border: 2px solid var(--mode);
+  font-weight: 700;
 }
 .chords button.same-chord {
-  background: lightgray;
+  background: color-mix(in srgb, var(--mode) 18%, transparent);
+  font-weight: 600;
 }
 
-/* Spelled chord, under the wheel */
-.spelled-chord { text-align: center; }
-.spelled-chord h2 {
-  margin: 0.5rem 0;
-  font-size: 1.2rem;
+/* The chosen chord: its notes on the left, the guitar neck on the right. */
+.chosen-chord {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 24px;
+}
+.chosen-summary {
+  flex: 0 1 270px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.chosen-label {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 6px;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.chosen-label .mode-dot { margin-right: 2px; }
+.spelled-chord-name {
+  margin: 0;
+  font-size: 2.75rem;
+  line-height: 1;
+}
+.chord-type-name {
+  margin-left: 10px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--muted);
 }
 .spelled-chord-notes {
   list-style: none;
@@ -182,92 +586,87 @@ body {
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem;
+  gap: 8px;
 }
 .spelled-chord-notes li {
+  flex: 1 0 3rem;
   display: flex;
   flex-direction: column;
-  min-width: 2.5rem;
-  border: 1px solid black;
-  padding: 0.3rem 0.5rem;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 6px;
+  border-radius: 12px;
+  background: var(--tile);
 }
 .spelled-note {
-  font-size: 1.2rem;
-  font-weight: bold;
+  font-size: 1.375rem;
+  font-weight: 700;
 }
 .spelled-degree {
-  font-size: 0.8rem;
-  color: dimgray;
+  font-size: 0.8125rem;
+  color: var(--muted);
 }
 
-/* Guitar neck at the bottom of the page: nut on the left, high e on top. */
-.guitar {
-  width: 100%;
-  max-width: 900px;
-  margin-top: 1.5rem;
+/* Arrows either side of "On guitar", to step through voicings. */
+.guitar-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.guitar-name {
+  flex: 1 1 auto;
   text-align: center;
+  font-size: 0.875rem;
+  color: var(--muted);
 }
-.guitar h2 {
-  display: inline-block;
-  margin: 0.5rem 0;
-  font-size: 1.2rem;
+.voicing-arrow { font-size: 1.25rem; }
+.voicing-count {
+  display: inline-block; /* Keeps the heading's dotted underline off the count. */
+  margin-left: 0.3rem;
 }
+
+/* Guitar neck: nut on the left, high e on top. */
 #guitar {
+  flex: 999 1 560px;
+  min-width: 0;
   display: block;
-  width: 100%;
   height: auto;
 }
 #guitar text {
   text-anchor: middle;
   dominant-baseline: central;
+  fill: var(--text);
 }
-.string { stroke: dimgray; }
-.fret { stroke: darkgray; stroke-width: 2; }
-.nut { stroke: black; stroke-width: 8; }
-.inlay { fill: lightgray; }
-.fret-number { font-size: 13px; fill: dimgray; }
-.finger, .barre { fill: black; }
-.string-note { font-size: 16px; font-weight: bold; }
-.string-mark { font-size: 16px; }
-.no-voicing { font-size: 16px; fill: dimgray; }
-
-/* Arrows either side of the guitar heading, to step through voicings. */
-.guitar-heading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.75rem;
+.wood { fill: var(--wood); }
+.grain {
+  fill: none;
+  stroke: var(--grain);
+  stroke-width: 1.5;
 }
-.voicing-arrow {
-  font: inherit;
-  font-size: 1.4rem;
-  line-height: 1;
-  width: 2rem;
-  height: 2rem;
-  border: 1px solid black;
-  background: white;
-  cursor: pointer;
+.string { stroke: var(--string); }
+.fret {
+  stroke: var(--fret);
+  stroke-width: 3;
 }
-.voicing-arrow:disabled {
-  color: lightgray;
-  border-color: lightgray;
-  cursor: help;
+.nut {
+  fill: var(--nut);
+  stroke: var(--fret);
 }
-.voicing-count {
-  display: inline-block; /* Keeps the heading's dotted underline off the count. */
-  margin-left: 0.3rem;
-  font-size: 0.85rem;
-  font-weight: normal;
-  color: dimgray;
+.inlay { fill: var(--inlay); }
+#guitar .fret-number {
+  font-size: 13px;
+  fill: var(--muted);
 }
-
-/* Links to the README and ABOUT at the bottom of the page. */
-.page-footer {
-  display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-  margin-top: 2rem;
-  font-size: 0.9rem;
+.finger, .barre { fill: var(--accent); }
+.string-note {
+  font-size: 16px;
+  font-weight: 700;
 }
-.page-footer a { color: dimgray; }
+#guitar .string-mark {
+  font-size: 16px;
+  fill: var(--muted);
+}
+#guitar .no-voicing {
+  font-size: 16px;
+  fill: var(--muted);
+}

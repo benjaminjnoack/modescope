@@ -55,7 +55,7 @@ Every push to `master` publishes `public/` to GitHub Pages, using the workflow i
 ├── package.json       Scripts and dev-only linter dependencies
 └── public/            Everything the browser loads
     ├── index.html     Markup
-    ├── styles.css     All styling (colors, fonts, layout)
+    ├── styles.css     All styling (colors, fonts, layout, light and dark themes)
     └── js/            ES modules, loaded directly by the browser (no build step)
         ├── music.js     Notes, modes, chord types, spelling. No DOM code.
         ├── tooltips.js  Tooltip wording. No DOM code.
@@ -63,6 +63,7 @@ Every push to `master` publishes `public/` to GitHub Pages, using the workflow i
         ├── alternates.js Hand-picked guitar voicings
         ├── fretboard.js Draws the guitar neck
         ├── state.js     Key, mode, lock and selection state
+        ├── theme.js     Light and dark theme switch
         ├── svg.js       SVG geometry and element helpers
         ├── ring.js      A reusable ring of labeled segments
         ├── drag.js      Drag-to-rotate with snapping and click detection
@@ -73,7 +74,7 @@ Every push to `master` publishes `public/` to GitHub Pages, using the workflow i
 
 - **Add a chord type:** add an entry to `CHORD_TYPES` in `music.js`, with its suffix, a name for the tooltip and its tones as `[degree, semitones above the root]`. It's then listed, spelled, explained and fingered on the guitar automatically.
 - **Change a mode's Roman numerals or description:** edit `MODES` in `music.js`.
-- **Change colors or fonts:** edit `styles.css`. Segments use the classes `selected` (gold) and `in-mode` (light yellow).
+- **Change colors or fonts:** edit the custom properties at the top of `styles.css`. Each color is defined once for the light theme and again for the dark theme (in two places that must match: the `prefers-color-scheme` block and `[data-theme="dark"]`). The modes' colors are `--mode-0` (Ionian) to `--mode-6` (Locrian).
 - **Add a guitar voicing:** add it to `PREFERRED` in `alternates.js` (it's then shown first), e.g. `"A9": ["x02423"]` (frets from low E to high e, `x` for muted). Check it with `node -e 'import("./public/js/guitar.js").then((g) => console.log(g.checkAlternates()))'`, which should print `[]`.
 - **Change tooltip wording:** edit `tooltips.js`.
 

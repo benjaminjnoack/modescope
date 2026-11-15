@@ -1,8 +1,8 @@
 // Builds the wheel and keeps it in sync with the state.
 
 import {
-  MODES, NOTES, chordsOn, chordType, majorForSignature, parentMajorName, scaleDegree,
-  signatureNotes, spellChord, spellScale,
+  CHORD_FAMILIES, MODES, NOTES, chordFamily, chordsOn, chordType, majorForSignature,
+  parentMajorName, scaleDegree, signatureNotes, spellChord, spellScale,
 } from "./music.js";
 import * as state from "./state.js";
 import { createRing } from "./ring.js";
@@ -10,6 +10,7 @@ import { makeDraggable } from "./drag.js";
 import { renderFretboard } from "./fretboard.js";
 import { voicingsFor } from "./guitar.js";
 import { createSvg, point, segmentPath } from "./svg.js";
+import { initTheme } from "./theme.js";
 import * as tips from "./tooltips.js";
 
 // Ring sizes: notes outside, modes inside, key/mode label in the center.
@@ -27,7 +28,15 @@ const keySignature = document.getElementById("key-signature");
 const keySignatureList = document.getElementById("key-signature-list");
 const selectedMarker = document.getElementById("selected-marker");
 const chordPanelTitle = document.getElementById("chord-panel-title");
-const chordList = document.getElementById("chord-list");
+const chordPanelSubtitle = document.getElementById("chord-panel-subtitle");
+const chordTableHead = document.getElementById("chord-table-head");
+const chordTableBody = document.getElementById("chord-table-body");
+const toolbarTonic = document.getElementById("toolbar-tonic");
+const toolbarMode = document.getElementById("toolbar-mode");
+const toolbarSignature = document.getElementById("toolbar-signature");
+const relativeButton = document.getElementById("relative-modes");
+const parallelButton = document.getElementById("parallel-modes");
+const chosenLabel = document.getElementById("chosen-label");
 const spelledName = document.getElementById("spelled-chord-name");
 const spelledNotes = document.getElementById("spelled-chord-notes");
 const guitarName = document.getElementById("guitar-name");
@@ -53,8 +62,8 @@ function render() {
   // Selected note shows its chosen spelling; the others show every spelling.
   NOTES.forEach((_, i) => noteRing.setLabel(i, state.noteName(i)));
 
-  // Inner ring: the current mode selected.
-  modeRing.layout(state.getModeRotation(), (i) => (MODES[i] === mode ? ["selected"] : []));
+  // Inner ring: each mode in its own color, the current one selected.
+  modeRing.layout(state.getModeRotation(), (i) => [`mode-${i}`, ...(MODES[i] === mode ? ["selected"] : [])]);
 
   // Roman numerals stay fixed outside the ring, one per mode degree.
   // Each has a tooltip naming the chord it stands for.
@@ -71,7 +80,16 @@ function render() {
   keyName.textContent = state.tonicName();
   modeName.textContent = mode.name;
 
-  noteGroup.classList.toggle("locked", state.isNoteRingLocked());
+  // The toolbar repeats the tonic and mode, and shows the lock as a switch.
+  toolbarTonic.textContent = state.tonicName();
+  toolbarTonic.title = tips.tonicTip(state.tonicName(), mode);
+  toolbarMode.replaceChildren(modeDot(state.currentModeIndex()), mode.name);
+  toolbarMode.title = tips.modeTip(mode);
+
+  const locked = state.isNoteRingLocked();
+  noteGroup.classList.toggle("locked", locked);
+  relativeButton.setAttribute("aria-pressed", String(!locked));
+  parallelButton.setAttribute("aria-pressed", String(locked));
 
   renderKeySignature();
   renderSelectedNote();
@@ -92,11 +110,13 @@ function renderKeySignature() {
   // Every mode with the same notes: F Aeolian, B♭ Dorian, ... for 4 flats.
   const parentScale = spellScale(parentMajorName(tonicName, state.currentModeIndex()), MODES[0]);
   const relatives = MODES.map((relative, i) => `${parentScale[i]} ${relative.name}`);
+  const signatureTip = tips.signatureTip(current, signatureNotes(spellScale(tonicName, mode)), relatives);
   keySignature.replaceChildren(
     current === 0 ? "no ♯/♭" : signatureLabel(current),
-    createSvg("title", {}, tips.signatureTip(
-      current, signatureNotes(spellScale(tonicName, mode)), relatives)),
+    createSvg("title", {}, signatureTip),
   );
+  toolbarSignature.textContent = signatureLabel(current);
+  toolbarSignature.title = signatureTip;
 
   const locked = state.isNoteRingLocked();
   const counts = Array.from({ length: 15 }, (_, i) => i - 7);
@@ -141,6 +161,8 @@ function renderSelectedNote() {
   const rootName = state.noteName(note);
   const tonicName = state.tonicName();
   chordPanelTitle.textContent = `Chords on ${rootName}`;
+  chordPanelSubtitle.textContent = `In each mode on ${tonicName}. Each mode has its color ` +
+    "from the inner ring, so a borrowed chord shows which mode it comes from.";
 
   // Panel rows: the current mode first, then the rest in order. Each row
   // spells the root with its own mode's letters: C in G♯ Ionian is B♯.
@@ -163,33 +185,81 @@ function renderSelectedNote() {
   }
   const chord = state.selectedChord();
   const chordRow = rows.find((row) => row.modeIndex === chord.mode);
-  renderSpelledChord(chordRow.root, chord.suffix, MODES[chord.mode]);
+  renderSpelledChord(chordRow.root, chord.suffix, chord.mode, chordRow.result);
 
-  chordList.replaceChildren(...rows.map(({ mode, modeIndex, offset, result, root }) => {
-    const item = document.createElement("li");
-    item.classList.toggle("current", offset === 0);
-    item.classList.toggle("absent", result === null);
+  renderChordTable(rows, chord, sameChord);
+}
 
-    // Header: mode name, and the degree's Roman numeral.
-    const header = document.createElement("div");
-    header.className = "chord-header";
+// A small dot in a mode's color, as on the inner ring.
+function modeDot(modeIndex) {
+  const dot = document.createElement("span");
+  dot.className = `mode-dot mode-${modeIndex}`;
+  return dot;
+}
+
+// The chord panel's table: a row per parallel mode (the current one first)
+// and a column per chord family (triad, power, sus, 6th ...). Every chord
+// is outlined in its mode's color, so a borrowed chord shows where it's from.
+function renderChordTable(rows, chord, sameChord) {
+  const tonicName = state.tonicName();
+  const rootName = state.noteName(state.selectedNote());
+
+  const corner = document.createElement("th");
+  corner.scope = "col";
+  corner.textContent = `Mode on ${tonicName}`;
+  chordTableHead.replaceChildren(corner, ...CHORD_FAMILIES.map((family) => {
+    const cell = document.createElement("th");
+    cell.scope = "col";
+    cell.textContent = family;
+    return cell;
+  }));
+
+  chordTableBody.replaceChildren(...rows.map(({ mode, modeIndex, offset, result, root }) => {
+    const row = document.createElement("tr");
+    row.className = `mode-${modeIndex}`;
+    row.classList.toggle("current", offset === 0);
+    row.classList.toggle("absent", result === null);
+
+    // Row header: the mode's color, its name and the degree's Roman numeral.
+    const header = document.createElement("th");
+    header.scope = "row";
     const modeLabel = document.createElement("span");
-    modeLabel.textContent = `${tonicName} ${mode.name}`;
+    modeLabel.textContent = mode.name;
+    modeLabel.title = tips.modeTip(mode);
     const numeral = document.createElement("span");
+    numeral.className = "numeral-label";
     numeral.textContent = result ? result.numeral : "—";
     if (result) {
       numeral.title = tips.numeralTip(result.numeral, tonicName, mode, root + result.chords[0]);
     } else {
       numeral.title = `${rootName} isn't in ${tonicName} ${mode.name}, so there are no chords on it.`;
     }
-    header.append(modeLabel, numeral);
-    item.append(header);
+    header.append(modeDot(modeIndex), modeLabel, numeral);
+    row.append(header);
 
-    // The chords available on this note, as a wrapping list.
-    if (result) {
+    if (!result) {
+      const note = document.createElement("td");
+      note.className = "absent-note";
+      note.colSpan = CHORD_FAMILIES.length;
+      note.textContent = `No ${rootName} in ${tonicName} ${mode.name}`;
+      row.append(note);
+      return row;
+    }
+
+    // One cell per family, holding the chords of that family on this note.
+    row.append(...CHORD_FAMILIES.map((family) => {
+      const cell = document.createElement("td");
+      const suffixes = result.chords.filter((suffix) => chordFamily(chordType(suffix)) === family);
+      if (suffixes.length === 0) {
+        const empty = document.createElement("span");
+        empty.className = "empty";
+        empty.textContent = "—";
+        cell.append(empty);
+        return cell;
+      }
       const chords = document.createElement("ul");
       chords.className = "chords";
-      chords.append(...result.chords.map((suffix) => {
+      chords.append(...suffixes.map((suffix) => {
         const item = document.createElement("li");
         const button = document.createElement("button");
         button.type = "button";
@@ -207,21 +277,25 @@ function renderSelectedNote() {
         item.append(button);
         return item;
       }));
-      item.append(chords);
-    }
-    return item;
+      cell.append(chords);
+      return cell;
+    }));
+    return row;
   }));
 }
 
-// Spell out a chord's notes under the wheel, with each note's scale degree
-// in the parallel mode it was chosen from (in C Lydian, D is D F♯ A: 2 ♯4 6).
-function renderSpelledChord(rootName, suffix, mode) {
+// The chosen chord's card: its notes, each with its scale degree in the
+// parallel mode it was chosen from (in C Lydian, D is D F♯ A: 2 ♯4 6), and
+// the chord on the guitar. `result` is that mode's chordsOn for the root.
+function renderSpelledChord(rootName, suffix, modeIndex, result) {
+  const mode = MODES[modeIndex];
   const names = spellChord(rootName, chordType(suffix));
   const tonicName = state.tonicName();
   const type = chordType(suffix);
   const degreeLabels = names.map((name) => scaleDegree(tonicName, name));
 
-  // Heading, e.g. "Dm7 in C Lydian", with a tooltip on each part.
+  // "Chosen chord · ii in C Lydian" over the chord's name, with a tooltip
+  // on each part.
   const tipSpan = (text, title) => {
     const span = document.createElement("span");
     span.className = "has-tip";
@@ -229,13 +303,22 @@ function renderSpelledChord(rootName, suffix, mode) {
     span.title = title;
     return span;
   };
-  spelledName.replaceChildren(
-    tipSpan(rootName, tips.rootTip({ rootName, tonicName, mode, type, degreeLabels })),
-    ...(suffix ? [tipSpan(suffix, tips.chordTypeTip(rootName + suffix, type))] : []),
+  chosenLabel.replaceChildren(
+    modeDot(modeIndex),
+    "Chosen chord · ",
+    tipSpan(result.numeral, tips.numeralTip(result.numeral, tonicName, mode, rootName + result.chords[0])),
     " in ",
     tipSpan(tonicName, tips.tonicTip(tonicName, mode)),
     " ",
     tipSpan(mode.name, tips.modeTip(mode)),
+  );
+  const typeName = document.createElement("span");
+  typeName.className = "chord-type-name";
+  typeName.textContent = type.name.replace(/ \(.*\)$/, "");
+  spelledName.replaceChildren(
+    tipSpan(rootName, tips.rootTip({ rootName, tonicName, mode, type, degreeLabels })),
+    ...(suffix ? [tipSpan(suffix, tips.chordTypeTip(rootName + suffix, type))] : []),
+    typeName,
   );
 
   spelledNotes.replaceChildren(...names.map((name, i) => {
@@ -260,12 +343,12 @@ function renderSpelledChord(rootName, suffix, mode) {
 function renderGuitar(chordName, voicings) {
   const index = Math.min(state.guitarVoicingIndex(chordName), Math.max(voicings.length - 1, 0));
   const count = voicings.length;
-  guitarName.textContent = `${chordName} on guitar`;
+  guitarName.textContent = "On guitar";
   guitarName.title = tips.guitarTip(chordName);
   if (count > 1) {
     const counter = document.createElement("span");
     counter.className = "voicing-count";
-    counter.textContent = ` ${index + 1} of ${count}`;
+    counter.textContent = ` · ${index + 1} of ${count}`;
     guitarName.append(counter);
   }
   renderFretboard(guitar, voicings[index] ?? null, chordName);
@@ -310,6 +393,16 @@ noteGroup.addEventListener("dblclick", () => {
   state.toggleNoteRingLock();
   render();
 });
+
+// The relative/parallel switch in the toolbar does the same as a double-click.
+const setLocked = (locked) => {
+  if (state.isNoteRingLocked() !== locked) state.toggleNoteRingLock();
+  render();
+};
+relativeButton.addEventListener("click", () => setLocked(false));
+parallelButton.addEventListener("click", () => setLocked(true));
+
+initTheme(document.getElementById("theme-toggle"));
 
 makeDraggable(svg, modeGroup, {
   getRotation: state.getModeRotation,

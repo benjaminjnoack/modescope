@@ -12,12 +12,15 @@ export function createRing(group, labels, { inner, outer }) {
   });
 
   // Position every segment for `rotation`. `classesFor(i)` returns the
-  // CSS classes (e.g. "selected") for segment i. Labels stay upright.
+  // CSS classes (e.g. "selected") for segment i, given to both the segment
+  // and its label. Labels stay upright.
   function layout(rotation, classesFor) {
     segments.forEach(({ path, text }, i) => {
       const center = i * step + rotation;
+      const classes = classesFor(i);
       path.setAttribute("d", segmentPath(inner, outer, center - step / 2, center + step / 2));
-      path.setAttribute("class", ["segment", ...classesFor(i)].join(" "));
+      path.setAttribute("class", ["segment", ...classes].join(" "));
+      text.setAttribute("class", classes.join(" "));
       const [x, y] = point((inner + outer) / 2, center);
       text.setAttribute("x", x);
       text.setAttribute("y", y);

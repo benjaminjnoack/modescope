@@ -43,6 +43,24 @@ export function chordType(suffix) {
   return CHORD_TYPES.find((type) => type.suffix === suffix);
 }
 
+// The columns of the chord table, in order.
+export const CHORD_FAMILIES = ["Triad", "Power", "Sus", "6th", "7th", "9th", "11th · 13th"];
+
+// Which family a chord type belongs to, worked out from its tones so a new
+// chord type finds its column by itself: m7 (1 ♭3 5 ♭7) is a "7th",
+// sus4 (1 4 5) is "Sus", and 5 (1 5) is "Power".
+export function chordFamily(type) {
+  const degrees = type.tones.map(([degree]) => degree);
+  if (degrees.length === 2) return "Power";
+  if (degrees.includes(2) || degrees.includes(4)) return "Sus";
+  const highest = Math.max(...degrees);
+  if (highest === 5) return "Triad";
+  if (highest === 6) return "6th";
+  if (highest === 7) return "7th";
+  if (highest === 9) return "9th";
+  return "11th · 13th";
+}
+
 const LETTERS = "CDEFGAB";
 const LETTER_SEMITONES = [0, 2, 4, 5, 7, 9, 11];
 
