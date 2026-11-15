@@ -11,7 +11,7 @@ npm start            # node server.js, serves public/ at http://localhost:3000
 PORT=8080 npm start
 ```
 
-- `server.js` is a dev-only static server that injects a live-reload snippet into HTML and reloads the page on any change under `public/`. Changes to `server.js` itself need a restart.
+- `server.js` is a dev-only static server that injects a live-reload snippet into HTML and reloads the page on any change under `public/`. The snippet also shows JavaScript errors in a red box at the top of the page, for testing on a phone (open `http://<this machine's IP>:3000` on the same Wi-Fi). Changes to `server.js` itself need a restart.
 - There is no build step, no bundler and no test suite. The only dependencies are dev-only linters (`npm install` once, which also turns on the pre-commit hook); the app in `public/` has no runtime dependencies. Don't add more dependencies, a build, or tooling unless asked.
 - To check a change, run the server and use the page. For pure logic in `music.js` / `tooltips.js` you can also import them from Node in a scratch script (they are ES modules with no DOM access).
 - **Before you call a change done, run `npm run lint` and fix everything it reports** (`npm run lint:fix` handles most of it). It checks every HTML, CSS, JS and Markdown file that isn't gitignored, using ESLint, Stylelint, html-validate and markdownlint. The pre-commit hook (`.githooks/pre-commit`) runs the same check. Don't get around it with `--no-verify` or by turning rules off unless asked.
@@ -30,12 +30,13 @@ All browser code is in `public/js/`, loaded as native ES modules from `index.htm
 | `tooltips.js` | Builds tooltip strings. **No DOM.** |
 | `guitar.js` | Guitar voicings for a chord (`voicingsFor`): the hand-picked ones, then the easiest root-position fingering found by searching the neck. Finds barres (`fingering`) and validates alternates (`checkAlternates`). Memoized. **No DOM.** |
 | `alternates.js` | `PREFERRED` (the user's) and `SUGGESTED` (Claude's) guitar voicings, keyed by chord name. Data only. **No DOM.** |
-| `fretboard.js` | `renderFretboard` — draws the horizontal guitar neck (nut left, high e on top) for a voicing. |
-| `state.js` | Module-level state (ring rotations, lock, selected note/spelling/chord, which guitar voicing is shown) behind getter/setter functions. |
+| `fretboard.js` | `renderFretboard` — draws the guitar neck for a voicing: lying down (nut left, high e on top), or with `vertical` (phones in portrait) turned a quarter turn into a chord chart (nut on top, low E left) with shorter frets. |
+| `state.js` | Module-level state (ring rotations, lock, selected note/spelling/chord, which guitar voicing is shown, the open explanation on touch screens) behind getter/setter functions. |
 | `svg.js` | SVG helpers and wheel geometry. |
 | `ring.js` | `createRing` — a ring of labeled segments with `layout`, `indexOf`, `setLabel`. |
 | `drag.js` | `makeDraggable` — rotate-by-drag with snapping and tap detection via pointer events. |
 | `main.js` | Grabs DOM elements, wires events, and `render()`s everything from state. |
+| `explain.js` | Touch screens, which don't show tooltips: tapping a term, or holding a button, puts its tooltip text in `state.explanation()`, which `render()` shows in a panel at the bottom. Reads the `title`s already on the page. |
 | `theme.js` | Light/dark theme: follows the system until the theme button is pressed, then remembers the choice in `localStorage`. Sets `data-theme` on `<html>`. |
 | `styles.css` | All styling. Colors are custom properties on `:root`, redefined for the dark theme (both under `prefers-color-scheme` and `[data-theme="dark"]`; keep the two in sync). Each mode has a color, `--mode-0` (Ionian) … `--mode-6`; a `mode-N` class sets `--mode` for an element. State is expressed with classes (`selected`, `in-mode`, `locked`, `current`, `absent`, `spelled`, `same-chord`, `dragging`). |
 
@@ -57,7 +58,8 @@ All browser code is in `public/js/`, loaded as native ES modules from `index.htm
 - Adding a chord type is only a `CHORD_TYPES` entry (`suffix`, `name`, `tones` as `[degree, semitones]`); listing, spelling, tooltips and the guitar voicing follow automatically, and `chordFamily` puts it in a column of the chord table from its tones. Guitar voicings come from the weights in `scoreVoicing` (`guitar.js`); if you change them, print the voicing of every root × chord type from Node and check familiar shapes (C x32010, F 133211, Bm x24432, D7 xx0212) still win. Degrees used must exist in `MAJOR_DEGREES` in `music.js`.
 - Keep `music.js`, `tooltips.js`, `guitar.js` and `alternates.js` free of DOM code.
 - Style: 2-space indent, double quotes, semicolons, `const`/arrow functions, small focused modules. Comments explain intent in plain English, often with a concrete musical example (e.g. "in C Lydian, D is D F♯ A: 2 ♯4 6"); follow that style.
-- Tooltips use native `title` attributes (and `<title>` inside SVG). Wording is plain, beginner-friendly English.
+- Tooltips use native `title` attributes (and `<title>` inside SVG). Wording is plain, beginner-friendly English. On touch screens `explain.js` shows the same text, so a new tooltip needs nothing extra.
+- Phones (`width <= 600px`, the same query in `styles.css` and `main.js`) get their own layout rather than a squeezed desktop one: the toolbar's controls stay pinned at the top, the panels stack in one scrolling column, and the guitar neck stands upright.
 - Commit messages are short and imperative; the project works directly on `master`.
 
 ## Guitar voicings

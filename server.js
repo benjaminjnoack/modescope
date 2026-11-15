@@ -20,10 +20,42 @@ const MIME_TYPES = {
   ".ico": "image/x-icon",
 };
 
-// Injected into every HTML page: reloads the page when the server says so.
+// Injected into every HTML page: reloads the page when the server says so,
+// and shows JavaScript errors on the page itself, for testing on a phone,
+// which has no developer tools. (Listening in the capture phase also
+// catches scripts and stylesheets that fail to load.) It's injected at the
+// end of <body>, so it runs before the deferred main.js module.
 const RELOAD_SNIPPET = `
 <script>
   new EventSource("/__reload").addEventListener("reload", () => location.reload());
+
+  (() => {
+    let box = null;
+    const report = (message) => {
+      if (!box) {
+        box = document.createElement("pre");
+        box.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:99999;margin:0;" +
+          "padding:8px 12px;max-height:40vh;overflow:auto;white-space:pre-wrap;" +
+          "font:12px/1.4 ui-monospace,monospace;color:#fff;background:#b3261e;";
+        box.addEventListener("click", () => { box.remove(); box = null; });
+        document.body.append(box);
+      }
+      box.textContent += message + "\\n";
+    };
+    window.addEventListener("error", (event) => {
+      const el = event.target;
+      if (el && el !== window && (el.src || el.href)) {
+        report("Failed to load " + (el.src || el.href));
+      } else {
+        const where = event.filename ? " (" + event.filename.replace(location.origin, "") +
+          ":" + event.lineno + ":" + event.colno + ")" : "";
+        report(event.message + where);
+      }
+    }, true);
+    window.addEventListener("unhandledrejection", (event) => {
+      report("Unhandled promise rejection: " + (event.reason && event.reason.stack || event.reason));
+    });
+  })();
 </script>`;
 
 const clients = new Set();
