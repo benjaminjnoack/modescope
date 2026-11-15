@@ -574,8 +574,11 @@ button[title] { cursor: pointer; }
   font-size: 2.75rem;
   line-height: 1;
 }
+/* On its own line under the chord symbol, so long names like
+   "half-diminished 7th" don't wrap beside it. */
 .chord-type-name {
-  margin-left: 10px;
+  display: block;
+  margin-top: 8px;
   font-size: 0.9375rem;
   font-weight: 500;
   color: var(--muted);

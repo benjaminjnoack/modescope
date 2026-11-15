@@ -57,7 +57,7 @@ These chord types are included:
 
 ## The chosen chord
 
-Below the wheel and the table, the chosen chord is spelled out note by note, next to the guitar. It starts as the first chord in the table; clicking a chord in the table chooses that one instead. The chord you chose is filled in, and the same chord in other modes is tinted with their colors. Above its name is the mode it was chosen from and its Roman numeral there, and after the name the kind of chord (minor triad, dominant 7th, …).
+Below the wheel and the table, the chosen chord is spelled out note by note, next to the guitar. It starts as the first chord in the table; clicking a chord in the table chooses that one instead. The chord you chose is filled in, and the same chord in other modes is tinted with their colors. Above its name is the mode it was chosen from and its Roman numeral there, and below the name the kind of chord (minor triad, dominant 7th, …).
 
 - **Letters:** each chord tone gets its own letter, so D♭m is D♭ F♭ A♭, not D♭ E A♭.
 - **Degree numbers:** the numbers under each note are scale degrees counted from the tonic of the mode the chord was chosen from, not from the chord's root. D in C Lydian reads 2 ♯4 6 rather than 1 3 5.
