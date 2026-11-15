@@ -14,7 +14,7 @@ The bar at the top shows the current tonic, mode and key signature. It also has:
 ## The wheel
 
 - **Outer ring (notes):** drag to change the key. The tonic sits under the **I** at the top and is gold. The other notes of the mode are pale gold, and the notes outside it are gray. The legend under the wheel shows what each color means.
-- **Inner ring (modes):** drag to change the mode. Each mode has its own color, which it keeps in the chord table. The current mode's color is stronger.
+- **Inner ring (modes):** drag to change the mode, or click a mode to turn it to the top. Each mode has its own color, which it keeps in the chord table. The current mode's color is stronger.
   - **Relative · keep notes (default):** the notes stay the same and the tonic moves. C Ionian becomes D Dorian, then E Phrygian, and so on.
   - **Parallel · keep tonic:** the tonic stays the same and the notes change. C Ionian becomes C Dorian, then C Phrygian, and so on. The outer ring is locked: it has a thick gray outline and can't be dragged.
 - **Switch between them** with the switch in the toolbar, or by double-clicking the outer ring.

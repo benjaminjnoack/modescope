@@ -409,6 +409,13 @@ makeDraggable(svg, modeGroup, {
   setRotation: state.setModeRotation,
   step: state.MODE_STEP,
   onChange: render,
+  // Click a mode to turn it to the top, without dragging.
+  onTap: (target) => {
+    const modeIndex = modeRing.indexOf(target);
+    if (modeIndex === -1) return;
+    state.selectMode(modeIndex);
+    render();
+  },
 });
 
 render();

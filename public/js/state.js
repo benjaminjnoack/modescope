@@ -135,8 +135,7 @@ export function setKeySignature(count) {
   if (noteRingLocked) {
     const match = modeForSignature(count);
     if (!match) return;
-    const steps = wrap(match.modeIndex - currentModeIndex(), MODES.length);
-    setModeRotation(modeRotation - steps * MODE_STEP);
+    selectMode(match.modeIndex);
     spellKey(parentMajorName(match.tonicName, match.modeIndex));
   } else {
     const parentName = majorForSignature(count);
@@ -144,6 +143,14 @@ export function setKeySignature(count) {
     setNoteRotation(getNoteRotation() - steps * NOTE_STEP);
     spellKey(parentName);
   }
+}
+
+// Turn the mode ring the shortest way until `modeIndex` (0 = Ionian) is at
+// the top. Like dragging it there: relative, C Ionian -> Dorian is D Dorian;
+// parallel, it's C Dorian.
+export function selectMode(modeIndex) {
+  const steps = wrap(modeIndex - currentModeIndex(), MODES.length);
+  setModeRotation(modeRotation - steps * MODE_STEP);
 }
 
 // The shortest way round a ring of `count` items: 5 steps of 7 is -2.
