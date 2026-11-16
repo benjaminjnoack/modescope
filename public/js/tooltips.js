@@ -93,8 +93,8 @@ function signatureWords(count) {
 // flats in staff order, `relatives` every mode that shares it (e.g. "F Aeolian").
 export function signatureTip(count, notes, relatives) {
   const which = count === 0 ? "" : ` (${notes.join(" ")})`;
-  return `Key signature: ${signatureWords(count)}${which}. This is what a staff in a songbook ` +
-    `shows at the start of each line. It only says which notes are used, so every mode with ` +
+  return `Key signature: ${signatureWords(count)}${which}. This is what written music ` +
+    `shows at the start of each staff. It only says which notes are used, so every mode with ` +
     `these notes shares it: ${relatives.join(", ")}. Turning the inner ring keeps the key ` +
     `signature and moves the tonic.`;
 }

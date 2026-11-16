@@ -24,7 +24,7 @@ The bar at the top shows the current tonic, mode and key signature. It also has:
 
 The center of the wheel shows the key signature of the current scale, as the number of sharps or flats a staff would show (for example 4♭ for F Aeolian). A key signature only says which notes are used, so every mode with the same notes shares it: four flats is A♭ Ionian, B♭ Dorian, C Phrygian, F Aeolian and so on. Turning the inner ring while it's unlocked keeps the key signature and moves the tonic.
 
-Under the wheel is a row of key signatures from 7♭ to 7♯; the current one is raised. Use it to find a song from a songbook: pick the signature on its staff, then turn the inner ring until the tonic is the note that sounds like home.
+Under the wheel is a row of key signatures from 7♭ to 7♯; the current one is raised. Use it to find the key of a piece of written music: pick the signature at the start of its staff, then turn the inner ring until the tonic is the note that sounds like home.
 
 - **Relative:** the outer ring turns to the signature's notes and the mode stays the same. From Aeolian, 4♭ goes to F Aeolian and 2♯ to B Aeolian.
 - **Parallel:** the tonic stays and the mode changes to the one with that signature. With C as the tonic, 4♭ goes to C Phrygian. Signatures that no mode on the tonic has are grayed out.
