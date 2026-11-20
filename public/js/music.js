@@ -31,6 +31,8 @@ export const CHORD_TYPES = [
   { suffix: "maj7",  name: "major 7th", tones: [[1, 0], [3, 4], [5, 7], [7, 11]] },
   { suffix: "m7",    name: "minor 7th", tones: [[1, 0], [3, 3], [5, 7], [7, 10]] },
   { suffix: "m7♭5",  name: "half-diminished 7th (minor 7th with a ♭5)", tones: [[1, 0], [3, 3], [5, 6], [7, 10]] },
+  { suffix: "add9",  name: "added 9th (a major triad with the 9th, no 7th)", tones: [[1, 0], [3, 4], [5, 7], [9, 14]] },
+  { suffix: "madd9", name: "minor added 9th (a minor triad with the 9th, no 7th)", tones: [[1, 0], [3, 3], [5, 7], [9, 14]] },
   { suffix: "9",     name: "dominant 9th", tones: [[1, 0], [3, 4], [5, 7], [7, 10], [9, 14]] },
   { suffix: "maj9",  name: "major 9th", tones: [[1, 0], [3, 4], [5, 7], [7, 11], [9, 14]] },
   { suffix: "m9",    name: "minor 9th", tones: [[1, 0], [3, 3], [5, 7], [7, 10], [9, 14]] },

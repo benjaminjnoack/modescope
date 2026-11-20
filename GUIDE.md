@@ -51,7 +51,7 @@ These chord types are included:
 | Suspended | sus2, sus4 |
 | 6ths | 6, m6 |
 | 7ths | 7, maj7, m7, m7♭5 |
-| 9ths | 9, maj9, m9 |
+| 9ths | add9, madd9, 9, maj9, m9 |
 | 11ths | m11 |
 | 13ths | 13, maj13 (without the 11th) |
 
