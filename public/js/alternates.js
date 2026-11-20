@@ -74,4 +74,6 @@ export const SUGGESTED = {
   "Aadd9": ["x02420"],
   "Emadd9": ["024000"],
   "Amadd9": ["x02410"],
+  "Cadd9♯4": ["x32032"],
+  "Gadd9♯4": ["320223"],
 };

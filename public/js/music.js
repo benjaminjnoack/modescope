@@ -15,7 +15,8 @@ export const MODES = [
 ];
 
 // Chord types. Each tone is [degree, semitones above the root]; the degree
-// (1, 3, 5, 6, 7, 9, 11, 13, or 2/4 for sus chords) decides which letter spells it.
+// (1, 3, 5, 6, 7, 9, 11, 13, or 2/4 for sus chords and the ♯4 of add9♯4) decides
+// which letter spells it.
 // A chord is available in a mode when every one of its notes is in the mode.
 // 13th chords leave out the 11th, as is usual in practice.
 export const CHORD_TYPES = [
@@ -33,6 +34,7 @@ export const CHORD_TYPES = [
   { suffix: "m7♭5",  name: "half-diminished 7th (minor 7th with a ♭5)", tones: [[1, 0], [3, 3], [5, 6], [7, 10]] },
   { suffix: "add9",  name: "added 9th (a major triad with the 9th, no 7th)", tones: [[1, 0], [3, 4], [5, 7], [9, 14]] },
   { suffix: "madd9", name: "minor added 9th (a minor triad with the 9th, no 7th)", tones: [[1, 0], [3, 3], [5, 7], [9, 14]] },
+  { suffix: "add9♯4", name: "Lydian add9 (a major triad with the 9th and ♯4, no 7th)", tones: [[1, 0], [3, 4], [4, 6], [5, 7], [9, 14]] },
   { suffix: "9",     name: "dominant 9th", tones: [[1, 0], [3, 4], [5, 7], [7, 10], [9, 14]] },
   { suffix: "maj9",  name: "major 9th", tones: [[1, 0], [3, 4], [5, 7], [7, 11], [9, 14]] },
   { suffix: "m9",    name: "minor 9th", tones: [[1, 0], [3, 3], [5, 7], [7, 10], [9, 14]] },
@@ -50,11 +52,13 @@ export const CHORD_FAMILIES = ["Triad", "Power", "Sus", "6th", "7th", "9th", "11
 
 // Which family a chord type belongs to, worked out from its tones so a new
 // chord type finds its column by itself: m7 (1 ♭3 5 ♭7) is a "7th",
-// sus4 (1 4 5) is "Sus", and 5 (1 5) is "Power".
+// sus4 (1 4 5) is "Sus", and 5 (1 5) is "Power". A 2nd or 4th only makes a
+// sus chord when it stands in for the 3rd: add9♯4 (1 3 ♯4 5 9) keeps its 3rd,
+// so it's a "9th".
 export function chordFamily(type) {
   const degrees = type.tones.map(([degree]) => degree);
   if (degrees.length === 2) return "Power";
-  if (degrees.includes(2) || degrees.includes(4)) return "Sus";
+  if (!degrees.includes(3) && (degrees.includes(2) || degrees.includes(4))) return "Sus";
   const highest = Math.max(...degrees);
   if (highest === 5) return "Triad";
   if (highest === 6) return "6th";
