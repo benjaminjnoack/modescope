@@ -17,6 +17,7 @@
 
 export const PREFERRED = {
   "Gm": ["355333"],
+  "Gsus4": ["3x0013"],
 };
 
 // Where a chord has a well-known open shape, it's listed first so it stays
