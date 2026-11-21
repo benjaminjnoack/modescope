@@ -48,7 +48,7 @@ These chord types are included:
 |---|---|
 | Triads | major, m, ° |
 | Power chord | 5 |
-| Suspended | sus2, sus4 |
+| Suspended | sus2, sus4, 7sus4 |
 | 6ths | 6, m6 |
 | 7ths | 7, maj7, m7, m7♭5 |
 | 9ths | add9, madd9, add9♯4, 9, maj9, m9 |

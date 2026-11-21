@@ -26,6 +26,7 @@ export const CHORD_TYPES = [
   { suffix: "5",     name: "power chord (root and 5th, no 3rd)", tones: [[1, 0], [5, 7]] },
   { suffix: "sus2",  name: "suspended 2nd (the 2nd replaces the 3rd)", tones: [[1, 0], [2, 2], [5, 7]] },
   { suffix: "sus4",  name: "suspended 4th (the 4th replaces the 3rd)", tones: [[1, 0], [4, 5], [5, 7]] },
+  { suffix: "7sus4", name: "dominant 7th suspended 4th (the 4th replaces the 3rd)", tones: [[1, 0], [4, 5], [5, 7], [7, 10]] },
   { suffix: "6",     name: "major 6th (a major triad with an added 6th)", tones: [[1, 0], [3, 4], [5, 7], [6, 9]] },
   { suffix: "m6",    name: "minor 6th (a minor triad with an added major 6th)", tones: [[1, 0], [3, 3], [5, 7], [6, 9]] },
   { suffix: "7",     name: "dominant 7th", tones: [[1, 0], [3, 4], [5, 7], [7, 10]] },
