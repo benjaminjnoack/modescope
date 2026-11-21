@@ -77,8 +77,8 @@ A voicing that appears more than once is shown once, at its first place. The sho
 When the user gives a voicing ("use 355333 for Gm"), add it to `PREFERRED`, in the order they want. When asked to suggest voicings (e.g. "alternates for A9"), propose them first, then add the ones they accept to `SUGGESTED`:
 
 - Key by chord name, root plus a `CHORD_TYPES` suffix: `"A9": ["x02423"]`. Use `♯`/`♭`; one entry covers both spellings of a root (`"B♭m"` is also A♯m).
-- Write frets low E to high e, `x` muted, `0` open: six characters (`"x02423"`), or space-separated when any fret is 10+ (`"8 10 10 9 8 8"`). Frets 0–12 only, since the neck stops at 12.
+- Write frets low E to high e, `x` muted, `0` open: six characters (`"x02423"`), or space-separated when any fret is 10+ (`"8 10 10 9 8 8"`). Frets 0–12 only, since the neck stops at 12. A `T` before the low E's fret means the thumb plays it over the top of the neck (`"T133210"` for Fmaj7); it's drawn as a dot marked T and doesn't count toward the four fingers. Only use it when the user asks for a thumb.
 - Only standard, commonly taught shapes you're confident of: barre chords on the E and A strings, open-position variants, common jazz voicings. Every string must play a chord tone. Inversions are allowed but say so when suggesting them.
 - Mind the order: the first entry becomes the chord's default. Don't put a barre shape ahead of the familiar open chord unless asked.
 - Verify: `node -e 'import("./public/js/guitar.js").then((g) => console.log(g.checkAlternates()))'` must print `[]` (it catches non-chord tones, wrong string count, frets out of range and shapes needing more than four fingers). Then print `voicingsFor(root, chordType(suffix))` to see the order and barres for the chord.
-- Barres are detected, not written: `fingering` uses the lowest fret where one finger can cover 2+ strings and leave ≤ 4 fingers in all, and only when more than four strings are fretted.
+- Barres are detected, not written: `fingering` uses the lowest fret where one finger can cover 2+ strings and leave ≤ 4 fingers in all, and only when more than four strings are fretted (not counting a thumbed string).

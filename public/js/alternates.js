@@ -10,7 +10,9 @@
 // are the same chord, so "B♭m" also covers A♯m. Each voicing lists the
 // frets from the low E string to the high e: "x" is muted, "0" open. Write
 // it as six characters ("x32010") or, when a fret is 10 or higher, as
-// numbers separated by spaces ("8 10 10 9 8 8"). Frets go up to 12.
+// numbers separated by spaces ("8 10 10 9 8 8"). Frets go up to 12. A "T"
+// before the low E string's fret means the thumb plays it, reaching over
+// the top of the neck: "T133210" (or "T1 3 3 2 1 0").
 // Barres and note names are worked out automatically. A voicing listed
 // twice is shown once, at its first place, and one with a note outside the
 // chord is ignored: run checkAlternates() from guitar.js to find those.
@@ -19,6 +21,7 @@ export const PREFERRED = {
   "Gm": ["355333"],
   "Gsus4": ["3x0013"],
   "Em7": ["022033"],
+  "Fmaj7": ["T133210"],
 };
 
 // Where a chord has a well-known open shape, it's listed first so it stays

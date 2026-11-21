@@ -714,6 +714,11 @@ button[title] { cursor: pointer; }
   fill: var(--muted);
 }
 .finger, .barre { fill: var(--accent); }
+#guitar .thumb-mark {
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--bg);
+}
 .string-note {
   font-size: 16px;
   font-weight: 700;

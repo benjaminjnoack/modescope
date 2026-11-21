@@ -56,7 +56,7 @@ export function renderFretboard(svg, voicing, chordName, { vertical = false } = 
   }
 }
 
-// The fingers, barre and string labels of a voicing.
+// The fingers, barre, thumb and string labels of a voicing.
 function draw(svg, voicing, chordName, fretX, endX) {
   if (!voicing) {
     svg.append(createSvg("text", { class: "no-voicing", x: (NUT_X + endX) / 2, y: MIDDLE_Y },
@@ -64,8 +64,9 @@ function draw(svg, voicing, chordName, fretX, endX) {
     return;
   }
 
-  const { frets, notes, barre, fingers } = voicing;
-  const tip = (string) => tips.guitarStringTip(STRINGS[string].name, frets[string], notes[string], chordName);
+  const { frets, notes, barre, thumb, fingers } = voicing;
+  const tip = (string) => tips.guitarStringTip(STRINGS[string].name, frets[string], notes[string], chordName,
+    thumb?.string === string);
 
   if (barre) {
     const top = stringY(barre.to) - DOT_RADIUS;
@@ -82,6 +83,18 @@ function draw(svg, voicing, chordName, fretX, endX) {
     const dot = createSvg("circle", { class: "finger", cx: fretX(fret), cy: stringY(string), r: DOT_RADIUS });
     dot.append(createSvg("title", {}, tip(string)));
     svg.append(dot);
+  }
+  // The thumb is a dot marked T.
+  if (thumb) {
+    const x = fretX(thumb.fret);
+    const y = stringY(thumb.string);
+    const mark = createSvg("g", { class: "thumb" });
+    mark.append(
+      createSvg("circle", { class: "finger", cx: x, cy: y, r: DOT_RADIUS }),
+      createSvg("text", { class: "thumb-mark", x, y }, "T"),
+      createSvg("title", {}, tip(thumb.string)),
+    );
+    svg.append(mark);
   }
 
   // Left of the nut: the note each string plays, then O or X.

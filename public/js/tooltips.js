@@ -125,10 +125,11 @@ function withOrdinal(label) {
 // One string of the guitar chord. `note` is { name, degree } as spelled
 // in the chord (degree counted from the chord's root, e.g. "♭3"), or null
 // when the string is muted: "B string, fret 3: D, the 5th of G".
-export function guitarStringTip(stringName, fret, note, chordName) {
+export function guitarStringTip(stringName, fret, note, chordName, thumb = false) {
   const string = `${stringName[0].toUpperCase()}${stringName.slice(1)} string`;
   if (!note) return `${string}: muted (X). Don't play it, or rest a finger on it to keep it quiet.`;
-  const where = fret === 0 ? "open (O), no finger needed" : `fret ${fret}`;
+  const where = fret === 0 ? "open (O), no finger needed" :
+    thumb ? `fret ${fret} with your thumb (T), wrapped over the top of the neck` : `fret ${fret}`;
   const role = note.degree === "1" ? "the root" : `the ${withOrdinal(note.degree)}`;
   return `${string}, ${where}: ${note.name}, ${role} of ${chordName}.`;
 }
@@ -143,7 +144,7 @@ export function barreTip(fret, strings) {
 export function guitarTip(chordName, vertical = false) {
   return `One way to play ${chordName} on a guitar in standard tuning (E A D G B E), ` +
     `with its root as the lowest note. Dots are fingers, a bar is one finger across several ` +
-    `strings, O is an open string and X a string you don't play. The letters ` +
+    `strings, T is your thumb, O is an open string and X a string you don't play. The letters ` +
     `${vertical ? "above" : "left of"} the nut are the notes each string sounds.`;
 }
 

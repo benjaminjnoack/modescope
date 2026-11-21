@@ -30,23 +30,26 @@ const voicings = new Map();
 //   chord (so D♭m's 3rd is F♭, not E), or null when muted.
 // - barre: { fret, from, to } (string indexes) when one finger lies across
 //   several strings, else null.
+// - thumb: { string, fret } when the thumb frets the low E string from over
+//   the top of the neck, else null. Only hand-picked voicings use it.
 // - fingers: the other fretted notes, as { string, fret }.
 export function voicingsFor(rootName, type) {
   const key = `${rootName} ${type.suffix}`;
   if (!voicings.has(key)) {
+    const found = findVoicing(rootName, type);
     const all = [
       ...listedFrets(PREFERRED, rootName, type),
       ...listedFrets(SUGGESTED, rootName, type),
-      findVoicing(rootName, type),
-    ].filter(Boolean);
-    const unique = all.filter((frets, i) =>
-      all.findIndex((other) => other.join() === frets.join()) === i);
-    voicings.set(key, unique.flatMap((frets) => describe(rootName, type, frets) ?? []));
+      ...(found ? [{ frets: found, thumb: null }] : []),
+    ];
+    const unique = all.filter(({ frets }, i) =>
+      all.findIndex((other) => other.frets.join() === frets.join()) === i);
+    voicings.set(key, unique.flatMap(({ frets, thumb }) => describe(rootName, type, frets, thumb) ?? []));
   }
   return voicings.get(key);
 }
 
-// A chord's voicings from one table in alternates.js, as fret lists.
+// A chord's voicings from one table in alternates.js, parsed by parseFrets.
 // G♯m and A♭m share theirs.
 function listedFrets(table, rootName, type) {
   const root = noteIndex(rootName);
@@ -56,10 +59,14 @@ function listedFrets(table, rootName, type) {
   });
 }
 
-// "x32010" or "8 10 10 9 8 8" -> [-1, 3, 2, 0, 1, 0] or [8, 10, 10, 9, 8, 8].
+// "x32010" or "8 10 10 9 8 8" -> frets [-1, 3, 2, 0, 1, 0] or [8, 10, 10, 9, 8, 8].
+// A "T" before a fret means the thumb plays it: "T133210" (Fmaj7) is
+// frets [1, 3, 3, 2, 1, 0] with thumb 0, the low E string.
 function parseFrets(text) {
-  const parts = text.includes(" ") ? text.split(" ") : [...text];
-  return parts.map((part) => (part === "x" ? MUTED : Number(part)));
+  const parts = text.includes(" ") ? text.split(" ") : text.match(/T?./g);
+  const thumb = parts.findIndex((part) => part.startsWith("T"));
+  const frets = parts.map((part) => part.replace(/^T/, "")).map((part) => (part === "x" ? MUTED : Number(part)));
+  return { frets, thumb: thumb === -1 ? null : thumb };
 }
 
 // Problems with the voicings in alternates.js, as a list of messages
@@ -71,14 +78,17 @@ export function checkAlternates() {
     const type = match && CHORD_TYPES.find(({ suffix }) => suffix === match[2]);
     if (!type) return [`${chord}: not a root and chord suffix from CHORD_TYPES`];
     return list.flatMap((text) => {
-      const frets = parseFrets(text);
+      const { frets, thumb } = parseFrets(text);
       const where = `${chord} ${text}`;
       if (frets.length !== STRINGS.length) return [`${where}: needs ${STRINGS.length} strings`];
       if (frets.some((fret) => Number.isNaN(fret) || fret > FRETS)) {
         return [`${where}: frets must be x or 0-${FRETS}`];
       }
-      if (!describe(match[1], type, frets)) return [`${where}: plays a note that isn't in ${chord}`];
-      const { barre, fingers } = fingering(frets);
+      if (thumb !== null && (thumb !== 0 || frets[0] <= 0 || text.split("T").length > 2)) {
+        return [`${where}: the thumb (T) can only fret the low E string`];
+      }
+      if (!describe(match[1], type, frets, thumb)) return [`${where}: plays a note that isn't in ${chord}`];
+      const { barre, fingers } = fingering(frets, thumb);
       if (fingers.length + (barre ? 1 : 0) > 4) return [`${where}: needs more than four fingers`];
       return [];
     });
@@ -86,8 +96,8 @@ export function checkAlternates() {
 }
 
 // A voicing's notes and fingering, or null if a string plays a note
-// that isn't in the chord.
-function describe(rootName, type, frets) {
+// that isn't in the chord. `thumb` is the string the thumb frets, or null.
+function describe(rootName, type, frets, thumb = null) {
   const names = spellChord(rootName, type);
   const degrees = chordFormula(type).split(" ");
   const tones = names.map(noteIndex);
@@ -97,7 +107,7 @@ function describe(rootName, type, frets) {
     return tone === -1 ? undefined : { name: names[tone], degree: degrees[tone] };
   });
   if (notes.includes(undefined)) return null;
-  return { frets, notes, ...fingering(frets) };
+  return { frets, notes, ...fingering(frets, thumb) };
 }
 
 // The easiest root-position voicing the app can find, as a fret list, or null.
@@ -196,9 +206,14 @@ function scoreVoicing(frets, root, third, required) {
 // lowest fret: C9 is x 3 2 3 3 3, a barre at fret 3 across the top three
 // strings with fingers on the A and D strings. A barre can't cross a string
 // that rings open or is fretted lower than it.
-export function fingering(frets) {
-  const fretted = frets.flatMap((fret, string) => (fret > 0 ? [{ string, fret }] : []));
-  let best = { barre: null, fingers: fretted };
+//
+// `thumb` is a string the thumb frets from over the top of the neck (only
+// ever the low E, from alternates.js), which leaves the four fingers free:
+// Fmaj7 as T1 3 3 2 1 0 is the thumb plus three fingers, not a barre.
+export function fingering(frets, thumb = null) {
+  const thumbed = thumb === null ? null : { string: thumb, fret: frets[thumb] };
+  const fretted = frets.flatMap((fret, string) => (fret > 0 && string !== thumb ? [{ string, fret }] : []));
+  let best = { barre: null, thumb: thumbed, fingers: fretted };
   if (fretted.length <= 4) return best;
 
   const count = ({ barre, fingers }) => fingers.length + (barre ? 1 : 0);
@@ -207,7 +222,7 @@ export function fingering(frets) {
     // Stretches of neighboring strings a finger at `fret` can lie across.
     const runs = [[]];
     frets.forEach((f, string) => {
-      if (f === MUTED || f >= fret) runs[runs.length - 1].push(string);
+      if (string !== thumb && (f === MUTED || f >= fret)) runs[runs.length - 1].push(string);
       else runs.push([]);
     });
     for (const run of runs) {
@@ -219,8 +234,8 @@ export function fingering(frets) {
       // The lowest barre that leaves enough fingers is the usual one (the
       // index finger): C is x 3 5 5 5 3, a barre at fret 3 with three
       // fingers at fret 5, not a barre at 5 with fingers at 3.
-      if (count({ barre, fingers }) <= 4) return { barre, fingers };
-      if (count({ barre, fingers }) < count(best)) best = { barre, fingers };
+      if (count({ barre, fingers }) <= 4) return { barre, thumb: thumbed, fingers };
+      if (count({ barre, fingers }) < count(best)) best = { barre, thumb: thumbed, fingers };
     }
   }
   return best;

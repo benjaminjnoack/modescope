@@ -67,6 +67,7 @@ Below the wheel and the table, the chosen chord is spelled out note by note, nex
 Beside the chosen chord's notes, it's shown on a guitar neck in standard tuning (E A D G B E), lying on its side: the nut is on the left, the high e string is on top (as in guitar tab), and frets 1–12 run to the right. The neck is maple in the light theme and ebony in the dark one.
 
 - **Dots** are fingers. A **bar** is one finger lying flat across several strings at one fret (a barre chord). They don't say which finger to use; that's up to you.
+- A dot marked **T** is your thumb, wrapped over the top of the neck to fret the low E string, as in Fmaj7 played 1 3 3 2 1 0.
 - Left of the nut, **O** marks a string played open and **X** a string you don't play.
 - Next to them is the **note each string sounds**, spelled as in the chord (D♭m shows F♭, not E).
 
