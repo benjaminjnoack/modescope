@@ -22,6 +22,7 @@ export const PREFERRED = {
   "Gsus4": ["3x0013", "355533"],
   "Em7": ["022033"],
   "Fmaj7": ["T133210"],
+  "F♯7": ["242322"],
 };
 
 // Where a chord has a well-known open shape, it's listed first so it stays
